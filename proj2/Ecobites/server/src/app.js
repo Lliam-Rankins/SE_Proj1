@@ -7,6 +7,8 @@ import orders from "./routes/orders.routes.js";
 import menuRoutes from "./routes/menu.routes.js";
 import restaurantRoutes from "./routes/restaurant.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
+import bidRoutes from './routes/bid.routes.js';
+
 
 const app = express();
 
@@ -22,8 +24,9 @@ app.use("/api/auth", auth);
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orders);
 app.use('/api/restaurants', restaurantRoutes);
-
 app.use('/api/profile', profileRoutes);
+app.use('/api/bids', bidRoutes);
+
 
 
 // Helpful root route so visiting http://localhost:3000/ doesn't show "Cannot GET /"
