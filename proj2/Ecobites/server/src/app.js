@@ -7,6 +7,7 @@ import orders from "./routes/orders.routes.js";
 import menuRoutes from "./routes/menu.routes.js";
 import restaurantRoutes from "./routes/restaurant.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
+import reviewRoutes from "./routes/review.routes.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/api/auth", auth);
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orders);
 app.use('/api/restaurants', restaurantRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.use('/api/profile', profileRoutes);
 

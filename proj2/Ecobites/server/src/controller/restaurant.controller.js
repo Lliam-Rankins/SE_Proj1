@@ -32,9 +32,19 @@ export const getRestaurantById = async (req, res) => {
       });
     }
     
+    // Include recent reviews
+    const Review = (await import('../models/Review.model.js')).default;
+    const recentReviews = await Review.find({ restaurantId: id })
+      .populate('customerId', 'name')
+      .limit(5)
+      .sort({ createdAt: -1 });
+
+    const restaurantData = restaurant.toObject ? restaurant.toObject() : restaurant;
+    
     res.json({
       success: true,
-      data: restaurant
+      data: restaurantData,
+      recentReviews
     });
   } catch (error) {
     res.status(500).json({
