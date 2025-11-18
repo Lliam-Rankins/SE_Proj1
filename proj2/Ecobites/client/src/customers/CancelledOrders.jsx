@@ -1,7 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { bidService } from "../api/services/bid.service";
-//import LoadingSpinner from "../components/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
 import PlaceBid from "./PlaceBid";
 
@@ -37,7 +36,7 @@ const CancelledOrders = () => {
   if (loading) return "loading";
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="pt-28 min-h-screen bg-gray-100 p-6">
       <h1 className="text-3xl font-bold text-earthbrown mb-8">
         Cancelled Orders Available for Bidding
       </h1>

@@ -18,7 +18,33 @@ export const bidService = {
   },
 
   placeBid: async (orderId, bidData) => {
-    const response = await axios.post(`${API_URL}/${orderId}/bid`, bidData, { withCredentials: true });
+    const response = await axios.post( `${API_URL}`, { orderId, ...bidData }, { withCredentials: true });
     return response.data.bid; // { success, bid }
   },
+
+  getMyBids: async () => {
+    const response = await axios.get(`${API_URL}/my-bids`, { withCredentials: true });
+    return response.data; // returns bids []
+  },
+
+  cancelBid: async (bidId) => {
+    const response = await axios.delete(`${API_URL}/${bidId}`, { withCredentials: true });
+    return response.data;
+  },
+
+  getBidsForOrder: async (orderId) => {
+    const response = await axios.get(`${API_URL}/order/${orderId}`, { withCredentials: true});
+    return response.data.data;
+  },
+
+  acceptBid: async (bidId) => {
+    const response = await axios.post(`${API_URL}/${bidId}/accept`, null, { withCredentials: true });
+    return response.data;
+  },
+
+  rejectBid: async (bidId) => {
+    const response = await axios.post(`${API_URL}/${bidId}/reject`, {}, { withCredentials: true });
+    return response.data;
+  },
+
 };

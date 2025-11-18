@@ -13,6 +13,7 @@ import Checkout from './customers/Checkout';
 import OrderStatus from './customers/OrderStatus';
 import OrderDetail from './customers/OrderDetail';
 import CancelledOrders from './customers/CancelledOrders';
+import MyBids from './customers/MyBids';
 import Restaurant from './restaurants/Restaurants';
 import MenuItems from './restaurants/MenuItems';
 import CustomerOrders from './restaurants/CustomerOrders';
@@ -20,6 +21,7 @@ import About from './pages/About';
 import { RestaurantProvider } from './context/RestaurantContext';
 import {ProtectedRoute} from './routes/ProtectedRoute';
 import { RoleBasedRoute } from './routes/RoleBasedRoute';
+
 
 function App() {
   return (
@@ -45,6 +47,7 @@ function App() {
           <Route path="/customer/orders" element={<OrderStatus />} />
           <Route path="/customer/orders/:orderId" element={<OrderDetail />} />
           <Route path="/customer/cancelled-orders" element={<CancelledOrders />} />
+          <Route path="/customer/my-bids" element={<MyBids />} />
         </Route>
 
         {/* Restaurant Routes */}

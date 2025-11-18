@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { restaurantService } from '../api/services/restaurant.service.js';
@@ -70,7 +71,7 @@ const Customer = () => {
               console.log('Fetched menu items:', menuItems);
               // Update selected restaurant with menu items (preserve id/_id so frontend can send menuItemId)
               setSelectedRestaurant(prev => ({
-                ...prev,
+                ...(prev || {}),
                 menuItems: menuItems.map(item => ({
                   _id: item._id || item.id,
                   id: item._id || item.id,
@@ -104,7 +105,9 @@ const Customer = () => {
         setShowSeasonalNudge(true);
         sessionStorage.removeItem('showSeasonalNudge');
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to access session storage:', error);
+    }
   }, []);
   const [cuisineFilter, setCuisineFilter] = useState('All');
 
@@ -232,14 +235,33 @@ const Customer = () => {
             <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={() => navigate('/customer/orders')}
-                className="bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
+                className="cursor-pointer bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
                 title="View Order Status"
               >
                 📋
               </button>
+
+              {/* Cancelled Orders */}
+              <button
+                onClick={() => navigate('/customer/cancelled-orders')}
+                className="cursor-pointer bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
+                title="View Cancelled Orders"
+              >
+                ❌
+              </button>
+
+              {/* My Bids */}
+                <button
+                  onClick={() => navigate('/customer/my-bids')}
+                  className="cursor-pointer bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
+                  title="View My Bids"
+                >
+                  💰
+              </button>
+
               <button
                 onClick={() => setIsCartOpen((s) => !s)}
-                className="bg-white text-emerald-600 px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-3 hover:bg-emerald-50 transition-colors"
+                className="cursor-pointer bg-white text-emerald-600 px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-3 hover:bg-emerald-50 transition-colors"
               >
                 <span className="text-lg">🛒</span>
                 <span>{cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
