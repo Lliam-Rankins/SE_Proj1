@@ -1,13 +1,16 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
 import { bidService } from '../api/services/bid.service';
 import { useAuthContext } from '../context/AuthContext';
 import { STATUS_COLORS, ORDER_STATUS } from '../utils/constants';
+import { useCart } from '../context/useCart';
 
 const OrderStatus = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuthContext();
+  //const { addOrderToCart } = useCart();
 
   const [pastOrders, setPastOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,13 +91,38 @@ const OrderStatus = () => {
   // handle accept order bid
   const handleAccept = async (bidId) => {
     try {
-      await bidService.acceptBid(bidId);
+      const response = await bidService.acceptBid(bidId);
+      const { order, bid } = response.data;
+      if (!order || !bid) throw new Error("Missing order or bid");
       // Update local bids state instead of refetching
       setBids(prev =>
       prev.map(bid =>
         bid._id === bidId ? { ...bid, status: "ACCEPTED" } : bid
       )
     );
+
+    const bidderId = bid.bidderId
+    // Load bidder's cart from localStorage
+    const storageKey = `ecoCart_${bidderId}`;
+    const existingCart = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    const newCartItem = {
+      items: order.items,
+      orderId: order._id,
+      total: order.total,
+      restaurant: order.restaurant || "Unknown"
+    };
+
+    localStorage.setItem(storageKey, JSON.stringify([...existingCart, newCartItem]));
+
+
+    // add items to bidder's cart
+    /**addToCart({
+      name: order.itemName,
+      price: bid.bidAmount,
+      restaurant: order.restaurantName,
+      quantity: order.quantity ?? 1
+    }); */
 
      showMessage("You have accepted a bid. Congratulations on avoiding wasting food!");
 

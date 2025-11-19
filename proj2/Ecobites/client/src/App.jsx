@@ -19,17 +19,19 @@ import MenuItems from './restaurants/MenuItems';
 import CustomerOrders from './restaurants/CustomerOrders';
 import About from './pages/About';
 import { RestaurantProvider } from './context/RestaurantContext';
+import { CartProvider } from './context/CartContext';
 import {ProtectedRoute} from './routes/ProtectedRoute';
 import { RoleBasedRoute } from './routes/RoleBasedRoute';
 
 
 function App() {
   return (
-           <RestaurantProvider>
-             <div className="flex min-h-screen flex-col">
-               <SiteHeader />
-               <main className="flex-1">
-                <Routes>
+    <RestaurantProvider>
+      <CartProvider>
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+          <main className="flex-1">
+        <Routes>
       {/* Public */}
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
@@ -66,6 +68,7 @@ function App() {
              </main>
              <SiteFooter />
            </div>
+           </CartProvider>
            </RestaurantProvider>
   );
 }

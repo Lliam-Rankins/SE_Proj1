@@ -12,14 +12,14 @@ export const bidService = {
     return response.data;
   },
 
-   getOrderById: async (orderId) => {
+  getOrderById: async (orderId) => {
     const response = await axios.get(`${API_URL}/${orderId}`, { withCredentials: true });
     return response.data.order; // { success, order }
   },
 
   placeBid: async (orderId, bidData) => {
     const response = await axios.post( `${API_URL}`, { orderId, ...bidData }, { withCredentials: true });
-    return response.data.bid; // { success, bid }
+    return response.data; // { success, bid, order }
   },
 
   getMyBids: async () => {
@@ -39,7 +39,7 @@ export const bidService = {
 
   acceptBid: async (bidId) => {
     const response = await axios.post(`${API_URL}/${bidId}/accept`, null, { withCredentials: true });
-    return response.data;
+    return response.data; // { bid, order }
   },
 
   rejectBid: async (bidId) => {
