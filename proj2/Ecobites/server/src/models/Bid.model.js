@@ -25,6 +25,22 @@ const bidSchema = new mongoose.Schema({
     type: String,
     maxlength: 500
   },
+  // New customer's delivery address for this bid
+  deliveryAddress: {
+    street: String,
+    city: String,
+    zipCode: String,
+    coordinates: {
+      lat: Number,
+      lng: Number
+    }
+  },
+  // New customer's payment method preference
+  paymentMethod: {
+    type: String,
+    enum: ['cash', 'card', 'online'],
+    default: 'card'
+  },
   expiresAt: {
     type: Date,
     required: true

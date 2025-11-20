@@ -199,6 +199,7 @@ export const getMyBids = async (req, res) => {
 export const acceptBid = async (req, res) => {
   try {
     const { bidId } = req.params;
+    const { deliveryAddress, paymentMethod } = req.body;
 
     const bid = await Bid.findById(bidId).populate('orderId');
     if (!bid) {
@@ -235,6 +236,15 @@ export const acceptBid = async (req, res) => {
       });
     }
 
+    // Get the new customer's details
+    const newCustomer = await User.findById(bid.bidderId);
+    if (!newCustomer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Bidder not found'
+      });
+    }
+
     // Accept the bid
     bid.status = 'ACCEPTED';
     await bid.save();
@@ -245,6 +255,19 @@ export const acceptBid = async (req, res) => {
     order.claimedVia = 'BID';
     order.originalTotal = order.total;
     order.total = bid.bidAmount;
+    
+    // Update delivery address - use provided address or new customer's default address
+    if (deliveryAddress) {
+      order.deliveryAddress = deliveryAddress;
+    } else if (newCustomer.address) {
+      order.deliveryAddress = newCustomer.address;
+    }
+    
+    // Update payment method - use provided method or new customer's preference
+    if (paymentMethod && ['cash', 'card', 'online'].includes(paymentMethod)) {
+      order.paymentMethod = paymentMethod;
+    }
+    
     order.status = 'PLACED'; // Restart the order lifecycle
     order.statusHistory.push({
       status: 'CLAIMED_BY_BID',
