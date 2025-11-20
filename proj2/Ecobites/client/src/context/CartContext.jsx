@@ -1,9 +1,23 @@
-import { useContext, useState } from 'react';
+/* eslint-disable no-unused-vars */
+import { useContext, useState, useEffect } from 'react';
 import { CartContext } from './contexts';
+import { useAuth } from '../hooks/useAuth';
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState([]);
+  const { currentUser } = useAuth();
+  const storageKey = currentUser ? `ecoCart_${currentUser._id}` : 'ecoCart_guest';
+  const [cart, setCart] = useState(() => {
+    // load initial cart from localStorage
+    const saved = localStorage.getItem(storageKey);
+    return saved ? JSON.parse(saved) : [];
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(cart));
+    console.log(cart)
+  }, [cart, storageKey]);
 
   const addToCart = (item) => {
     setCart((prev) => {
@@ -19,6 +33,18 @@ export const CartProvider = ({ children }) => {
     });
     setIsCartOpen(true);
   };
+
+  /** 
+  const addOrderToCart = (order) => {
+    order.items.forEach(item => {
+      addToCart({
+        menuItemId: item.menuItemId,
+        name: item.name,
+        quantity: item.quantity,
+        restaurant: order.restaurantName || order.restaurant || "Unknown"
+      })
+    })
+  } */
 
   const removeFromCart = (index) => {
     setCart((prev) => {
@@ -51,6 +77,7 @@ export const CartProvider = ({ children }) => {
         cart,
         isCartOpen,
         addToCart,
+        //addOrderToCart,
         removeFromCart,
         clearCart,
         toggleCart,
@@ -62,6 +89,7 @@ export const CartProvider = ({ children }) => {
   );
 };
 
+/** 
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
@@ -69,5 +97,6 @@ export const useCart = () => {
   }
   return context;
 };
+*/
 
 // Note: raw CartContext is exported from `contexts.js`.
