@@ -24,6 +24,7 @@ const RestaurantReviews = ({ restaurantId }) => {
   const [respondingTo, setRespondingTo] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [filterRating, setFilterRating] = useState(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -93,7 +94,11 @@ const RestaurantReviews = ({ restaurantId }) => {
         comment: '',
         ratings: { food: 5, service: 5, delivery: 5, value: 5 }
       });
+
       fetchReviews();
+      // Refetch updated restaurant info
+      const updatedRestaurant = await reviewService.getById(selectedRestaurant.id);
+      setSelectedRestaurant(updatedRestaurant);
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to create review');
     }
@@ -196,19 +201,19 @@ const RestaurantReviews = ({ restaurantId }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
       {/* Stats Section */}
-      <div className="mb-8 bg-white rounded-lg shadow p-6">
+      <div className="mb-6 bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-4xl font-bold">{stats.averageRating.toFixed(1)}</div>
-            <div className="text-gray-600">{stats.totalReviews} reviews</div>
+            <div className="text-gray-600">{stats.totalReviews}  reviews</div>
           </div>
           
           {user && user.role === 'customer' && !isRestaurantOwner() && (
             <button
               onClick={() => setShowReviewForm(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
               Write a Review
             </button>
@@ -251,7 +256,8 @@ const RestaurantReviews = ({ restaurantId }) => {
 
       {/* Review Form Modal */}
       {showReviewForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+          style={{ backgroundColor: "rgba(0,0,0,0.3)" }}>
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-bold mb-4">Write a Review</h3>
             <form onSubmit={handleCreateReview}>
@@ -291,7 +297,7 @@ const RestaurantReviews = ({ restaurantId }) => {
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                 >
                   Submit
                 </button>
@@ -301,7 +307,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                     setShowReviewForm(false);
                     setFormError('');
                   }}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                  className="cursor-pointer bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
                 >
                   Cancel
                 </button>
@@ -354,7 +360,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                   >
                     Save
                   </button>
@@ -392,13 +398,13 @@ const RestaurantReviews = ({ restaurantId }) => {
                     <div className="flex gap-2">
                       <button
                         onClick={() => startEdit(review)}
-                        className="text-blue-600 hover:underline text-sm"
+                        className="cursor-pointer text-blue-600 hover:underline text-sm"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => setConfirmDelete(review._id)}
-                        className="text-red-600 hover:underline text-sm"
+                        className="cursor-pointer text-red-600 hover:underline text-sm"
                       >
                         Delete
                       </button>
@@ -412,7 +418,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                 <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                   <button
                     onClick={() => handleMarkHelpful(review._id)}
-                    className="hover:text-blue-600"
+                    className="cursor-pointer hover:text-blue-600"
                   >
                     Helpful
                   </button>
@@ -482,20 +488,20 @@ const RestaurantReviews = ({ restaurantId }) => {
 
             {/* Delete Confirmation */}
             {confirmDelete === review._id && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="fixed inset-0 bg-gray bg-opacity-70 flex items-center justify-center z-50" style={{ backgroundColor: "rgba(0,0,0,0.3)" }}>
                 <div className="bg-white rounded-lg p-6 max-w-sm">
                   <h3 className="text-lg font-bold mb-4">Delete Review?</h3>
                   <p className="mb-4">Are you sure you want to delete this review?</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleDeleteReview(review._id)}
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                      className="cursor-pointer bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                     >
                       Confirm
                     </button>
                     <button
                       onClick={() => setConfirmDelete(null)}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                      className="cursor-pointer bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
                     >
                       Cancel
                     </button>

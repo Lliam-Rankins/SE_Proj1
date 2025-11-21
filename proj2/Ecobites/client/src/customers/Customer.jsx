@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { restaurantService } from '../api/services/restaurant.service.js';
 import { menuService } from '../api/services/menu.service.js';
 import { useRestaurantContext } from '../context/RestaurantContext';
+import RestaurantReviews from '../restaurants/RestaurantReviews.jsx';
 
 
 const Customer = () => {
@@ -14,7 +15,7 @@ const Customer = () => {
   // Fetch restaurants from API
   const [restaurants, setRestaurants] = useState([]);
   const { selectedRestaurant, setSelectedRestaurant, menu, fetchMenu } = useRestaurantContext();
-
+  const [showReviews, setShowReviews] = useState(false);
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -390,11 +391,13 @@ const Customer = () => {
                             onClick={() => {
                               setSelectedRestaurant(r);
                               fetchMenu(r.id);
+                              setShowReviews(true);
                             }} 
                             className="px-3 py-1 bg-emerald-600 text-white rounded-md text-sm font-semibold"
                           >
                             View Menu
                           </button>
+
                         </div>
                       </div>
                     </div>
@@ -405,10 +408,20 @@ const Customer = () => {
           )}
         </section>
 
-        {/* Right column removed per request - restaurants grid now uses full width */}
+        {/* Right column removed - restaurants grid now uses full width */}
       </main>
 
       {/* Menu is now shown inline in the left column when a restaurant is selected */}
+
+      {showReviews && (
+        <div className="bg-white rounded-xl p-6 shadow-md mt-6">
+        <RestaurantReviews
+          restaurantId={selectedRestaurant?.id}
+          onClose={() => setShowReviews(false)}
+        />
+        </div>
+      )}
+
 
       {/* Cart Drawer */}
       {isCartOpen && (

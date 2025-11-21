@@ -15,6 +15,7 @@ import OrderDetail from './customers/OrderDetail';
 import CancelledOrders from './customers/CancelledOrders';
 import MyBids from './customers/MyBids';
 import Restaurant from './restaurants/Restaurants';
+import RestaurantReviews from './restaurants/RestaurantReviews';
 import MenuItems from './restaurants/MenuItems';
 import CustomerOrders from './restaurants/CustomerOrders';
 import About from './pages/About';
@@ -50,6 +51,7 @@ function App() {
           <Route path="/customer/orders/:orderId" element={<OrderDetail />} />
           <Route path="/customer/cancelled-orders" element={<CancelledOrders />} />
           <Route path="/customer/my-bids" element={<MyBids />} />
+          <Route path="/customer/restaurant-reviews" element={<RestaurantReviews />} />
         </Route>
 
         {/* Restaurant Routes */}
