@@ -91,7 +91,7 @@ const CancelledOrders = () => {
 
               <button
                 onClick={() => openModal(order)}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg transition-colors"
+                className="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg transition-colors"
               >
                 Place Bid
               </button>
