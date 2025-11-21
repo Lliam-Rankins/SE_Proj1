@@ -101,28 +101,7 @@ const OrderStatus = () => {
       )
     );
 
-    const bidderId = bid.bidderId
-    // Load bidder's cart from localStorage
-    const storageKey = `ecoCart_${bidderId}`;
-    const existingCart = JSON.parse(localStorage.getItem(storageKey)) || [];
-
-    const newCartItem = {
-      items: order.items,
-      orderId: order._id,
-      total: order.total,
-      restaurant: order.restaurant || "Unknown"
-    };
-
-    localStorage.setItem(storageKey, JSON.stringify([...existingCart, newCartItem]));
-
-
-    // add items to bidder's cart
-    /**addToCart({
-      name: order.itemName,
-      price: bid.bidAmount,
-      restaurant: order.restaurantName,
-      quantity: order.quantity ?? 1
-    }); */
+    //const bidderId = bid.bidderId
 
      showMessage("You have accepted a bid. Congratulations on avoiding wasting food!");
 
@@ -262,17 +241,18 @@ const OrderStatus = () => {
                         <div className="flex flex-col gap-2">
                           <button
                             onClick={() => handleAccept(bid._id)}
-                            className="cursor-pointer bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700"
+                            className="cursor-pointer bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-emerald-700 transition-colors duration-200"
                           >
                             Accept
                           </button>
                           <button
                             onClick={() => handleReject(bid._id)}
-                            className="cursor-pointer bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                            className="cursor-pointer bg-red-500 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-red-600 transition-colors duration-200"
                           >
                             Reject
                           </button>
                         </div>
+
                       )}
                     </li>
                   ))}

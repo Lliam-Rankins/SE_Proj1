@@ -45,7 +45,7 @@ export const getAvailableCancelledOrders = async (req, res) => {
 // Place a bid on a cancelled order
 export const placeBid = async (req, res) => {
   try {
-    const { orderId, bidAmount, message } = req.body;
+    const { orderId, bidAmount, message, deliveryAddress, paymentMethod } = req.body;
     const bidderId = req.user._id;
 
     // Validate bidder is a customer
@@ -117,6 +117,8 @@ export const placeBid = async (req, res) => {
       bidderId,
       bidAmount,
       message: message || '',
+      deliveryAddress, 
+      paymentMethod, 
       expiresAt
     });
 
@@ -199,7 +201,7 @@ export const getMyBids = async (req, res) => {
 export const acceptBid = async (req, res) => {
   try {
     const { bidId } = req.params;
-    const { deliveryAddress, paymentMethod } = req.body;
+    //const { deliveryAddress, paymentMethod } = req.body;
 
     const bid = await Bid.findById(bidId).populate('orderId');
     if (!bid) {
@@ -255,7 +257,10 @@ export const acceptBid = async (req, res) => {
     order.claimedVia = 'BID';
     order.originalTotal = order.total;
     order.total = bid.bidAmount;
-    
+    order.deliveryAddress = bid.deliveryAddress;
+    order.paymentMethod = bid.paymentMethod;
+
+    /** 
     // Update delivery address - use provided address or new customer's default address
     if (deliveryAddress) {
       order.deliveryAddress = deliveryAddress;
@@ -266,7 +271,7 @@ export const acceptBid = async (req, res) => {
     // Update payment method - use provided method or new customer's preference
     if (paymentMethod && ['cash', 'card', 'online'].includes(paymentMethod)) {
       order.paymentMethod = paymentMethod;
-    }
+    } */
     
     order.status = 'PLACED'; // Restart the order lifecycle
     order.statusHistory.push({

@@ -10,8 +10,8 @@ const PlaceBid = ({ order, onClose }) => {
   const [deliveryAddress, setDeliveryAddress] = useState({
     street: '',
     city: '',
-    state: '',
-    zip: '',
+    zipCode: '',
+    coordinates: { lat: null, lng: null },
   });
 
   const handleChange = (field, value) => {
@@ -38,6 +38,83 @@ const PlaceBid = ({ order, onClose }) => {
   };
 
   return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
+      <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-lg relative">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="cursor-pointer absolute top-4 right-4 text-gray-500 hover:text-red-500 text-lg font-bold"
+        >
+          ✕
+        </button>
+
+        {/* Header */}
+        <h2 className="text-2xl font-bold mb-2 text-gray-800">{order.restaurant || "Unknown Restaurant"}</h2>
+        <p className="text-sm text-gray-500 mb-1">Order #{order.orderNumber}</p>
+        <p className="text-lg font-semibold text-emerald-600 mb-4">Total: ${order.total.toFixed(2)}</p>
+
+        {/* Items */}
+        <h3 className="text-lg font-semibold mb-2">Items:</h3>
+        <ul className="list-disc list-inside mb-4 max-h-40 overflow-y-auto">
+          {order.items.map((item) => (
+            <li key={item._id} className="flex justify-between text-gray-700 mb-1">
+              <span className="font-semibold text-gray-800">• {item.name}</span>
+              <span className="text-gray-500">x {item.quantity}</span>
+            </li>
+          ))}
+        </ul>
+
+        {error && <p className="text-red-600 mb-2">{error}</p>}
+
+        {/* Bid Input */}
+        <div className="mb-4">
+          <input
+            type="number"
+            value={bidAmount}
+            onChange={(e) => setBidAmount(e.target.value)}
+            placeholder="Enter your bid"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition"
+          />
+        </div>
+
+        {/* Delivery Address */}
+        <h3 className="text-lg font-semibold mb-2">Delivery Address</h3>
+        <div className="space-y-3 mb-4">
+          <input
+            type="text"
+            placeholder="Street"
+            value={deliveryAddress.street}
+            onChange={(e) => handleChange('street', e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition"
+          />
+          <input
+            type="text"
+            placeholder="City"
+            value={deliveryAddress.city}
+            onChange={(e) => handleChange('city', e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition"
+          />
+          <input
+            type="text"
+            placeholder="ZIP Code"
+            value={deliveryAddress.zipCode}
+            onChange={(e) => handleChange('zipCode', e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition"
+          />
+        </div>
+
+        {/* Submit Button */}
+        <button
+          onClick={handlePlaceBid}
+          disabled={loading}
+          className="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-semibold transition"
+        >
+          {loading ? "Placing Bid..." : "Place Bid"}
+        </button>
+      </div>
+    </div>
+
+    /** 
     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
       <button
         onClick={onClose}
@@ -84,16 +161,9 @@ const PlaceBid = ({ order, onClose }) => {
       />
       <input
         type="text"
-        placeholder="State"
-        value={deliveryAddress.state}
-        onChange={(e) => handleChange('state', e.target.value)}
-        className="w-full p-2 border rounded"
-      />
-      <input
-        type="text"
         placeholder="ZIP Code"
-        value={deliveryAddress.zip}
-        onChange={(e) => handleChange('zip', e.target.value)}
+        value={deliveryAddress.zipCode}
+        onChange={(e) => handleChange('zipCode', e.target.value)}
         className="w-full p-2 border rounded"
       />
 
@@ -104,7 +174,7 @@ const PlaceBid = ({ order, onClose }) => {
       >
         {loading ? "Placing Bid..." : "Place Bid"}
       </button>
-    </div>
+    </div> */
   );
 };
 
