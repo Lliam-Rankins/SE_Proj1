@@ -157,16 +157,16 @@ reviewSchema.statics.updateRestaurantRating = async function(restaurantId) {
   if (stats.length > 0) {
     const User = mongoose.model('User');
     await User.findByIdAndUpdate(restaurantId, {
-      'restaurantInfo.averageRating': Math.round(stats[0].averageRating * 10) / 10,
-      'restaurantInfo.totalReviews': stats[0].totalReviews,
-      'restaurantInfo.ratingDistribution': {
+      'averageRating': Math.round(stats[0].averageRating * 10) / 10,
+      'totalReviews': stats[0].totalReviews,
+      'ratingDistribution': {
         5: stats[0].fiveStars,
         4: stats[0].fourStars,
         3: stats[0].threeStars,
         2: stats[0].twoStars,
         1: stats[0].oneStar
       },
-      'restaurantInfo.detailedRatings': {
+      'detailedRatings': {
         food: stats[0].avgFood ? Math.round(stats[0].avgFood * 10) / 10 : null,
         service: stats[0].avgService ? Math.round(stats[0].avgService * 10) / 10 : null,
         delivery: stats[0].avgDelivery ? Math.round(stats[0].avgDelivery * 10) / 10 : null,
@@ -177,9 +177,9 @@ reviewSchema.statics.updateRestaurantRating = async function(restaurantId) {
     // No reviews, reset to defaults
     const User = mongoose.model('User');
     await User.findByIdAndUpdate(restaurantId, {
-      'restaurantInfo.averageRating': 0,
-      'restaurantInfo.totalReviews': 0,
-      'restaurantInfo.ratingDistribution': {
+      'averageRating': 0,
+      'totalReviews': 0,
+      'ratingDistribution': {
         5: 0, 4: 0, 3: 0, 2: 0, 1: 0
       }
     });

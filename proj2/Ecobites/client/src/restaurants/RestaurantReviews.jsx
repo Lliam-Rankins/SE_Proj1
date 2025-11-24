@@ -1,10 +1,13 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { reviewService } from '../api/services/review.service';
 import { useAuth } from '../hooks/useAuth';
+import { restaurantService } from '../api/services/restaurant.service';
 
-const RestaurantReviews = ({ restaurantId }) => {
+const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, ratingDistribution, onRatingUpdate }) => {
   const { user } = useAuth();
   const [reviews, setReviews] = useState([]);
+  const [avg, setAvg] = useState(averageRating || 0);
   const [stats, setStats] = useState({
     averageRating: 0,
     totalReviews: 0,
@@ -24,6 +27,7 @@ const RestaurantReviews = ({ restaurantId }) => {
   const [respondingTo, setRespondingTo] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [filterRating, setFilterRating] = useState(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -40,8 +44,25 @@ const RestaurantReviews = ({ restaurantId }) => {
   const [responseText, setResponseText] = useState('');
 
   useEffect(() => {
+    const fetchRestaurant = async () => {
+      try {
+        const data = await restaurantService.getById(restaurantId);
+        setSelectedRestaurant(data);
+      } catch (error) {
+        console.error('Failed to fetch restaurant:', error)
+      }
+    }
+
+    fetchRestaurant();
+  }, [restaurantId]);
+
+  useEffect(() => {
     fetchReviews();
   }, [restaurantId, pagination.page, filterRating]);
+
+  useEffect(() => {
+    setAvg(averageRating);
+  }, [averageRating]);
 
   const fetchReviews = async () => {
     try {
@@ -62,6 +83,15 @@ const RestaurantReviews = ({ restaurantId }) => {
       setReviews(data.reviews);
       setStats(data.stats);
       setPagination(data.pagination);
+
+      // Calculate average rating & notify parent 
+      if (data.reviews && data.reviews.length > 0 && onRatingUpdate) {
+        const avg = data.reviews.reduce((sum, r) => sum + r.rating, 0) / data.reviews.length;
+        onRatingUpdate(avg);
+      } else if (onRatingUpdate) {
+        // No reviews => set average to 0
+        onRatingUpdate(0);
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch reviews');
     } finally {
@@ -80,12 +110,16 @@ const RestaurantReviews = ({ restaurantId }) => {
     }
 
     try {
-      await reviewService.create({
+      const response = await reviewService.create({
         restaurantId,
         rating: parseInt(formData.rating),
         comment: formData.comment,
         ratings: formData.ratings
       });
+
+      const { review, stats } = response;
+      setReviews(prev => [review, ...prev]); // add new review to state
+      setStats(stats); // update avg rating
 
       setShowReviewForm(false);
       setFormData({
@@ -93,7 +127,9 @@ const RestaurantReviews = ({ restaurantId }) => {
         comment: '',
         ratings: { food: 5, service: 5, delivery: 5, value: 5 }
       });
-      fetchReviews();
+
+      await fetchReviews();
+
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to create review');
     }
@@ -110,11 +146,15 @@ const RestaurantReviews = ({ restaurantId }) => {
     }
 
     try {
-      await reviewService.update(editingReview._id, {
+      const response = await reviewService.update(editingReview._id, {
         rating: parseInt(formData.rating),
         comment: formData.comment,
         ratings: formData.ratings
       });
+
+      const { review, stats } = response;
+      setReviews(prev => prev.map(r => r._id === review._id ? review : r));
+      setStats(stats);
 
       setEditingReview(null);
       setFormData({
@@ -122,7 +162,9 @@ const RestaurantReviews = ({ restaurantId }) => {
         comment: '',
         ratings: { food: 5, service: 5, delivery: 5, value: 5 }
       });
+
       fetchReviews();
+
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to update review');
     }
@@ -130,7 +172,12 @@ const RestaurantReviews = ({ restaurantId }) => {
 
   const handleDeleteReview = async (reviewId) => {
     try {
-      await reviewService.delete(reviewId);
+      const response = await reviewService.delete(reviewId);
+
+      const { stats } = response;
+      setReviews(prev => prev.filter(r => r._id !== reviewId));
+      setStats(stats);
+
       setConfirmDelete(null);
       fetchReviews();
     } catch (err) {
@@ -195,20 +242,21 @@ const RestaurantReviews = ({ restaurantId }) => {
     return <div className="p-4 text-red-600">Error: {error}</div>;
   }
 
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
       {/* Stats Section */}
-      <div className="mb-8 bg-white rounded-lg shadow p-6">
+      <div className="mb-6 bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-4xl font-bold">{stats.averageRating.toFixed(1)}</div>
-            <div className="text-gray-600">{stats.totalReviews} reviews</div>
+            <div className="text-4xl font-bold">{avg?.toFixed(1) || 0}</div>
+            <div className="text-gray-600">{totalReviews || 0} reviews</div>
           </div>
           
           {user && user.role === 'customer' && !isRestaurantOwner() && (
             <button
               onClick={() => setShowReviewForm(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
               Write a Review
             </button>
@@ -216,7 +264,7 @@ const RestaurantReviews = ({ restaurantId }) => {
         </div>
 
         {/* Rating Distribution */}
-        {stats.ratingDistribution && (
+        {ratingDistribution && (
           <div className="space-y-2">
             {[5, 4, 3, 2, 1].map((star) => (
               <div key={star} className="flex items-center gap-2">
@@ -233,15 +281,15 @@ const RestaurantReviews = ({ restaurantId }) => {
                     className="bg-yellow-400 h-2 rounded"
                     style={{
                       width: `${
-                        stats.totalReviews > 0
-                          ? ((stats.ratingDistribution[star] || 0) / stats.totalReviews) * 100
+                        totalReviews > 0
+                          ? ((ratingDistribution[star] || 0) / totalReviews) * 100
                           : 0
                       }%`
                     }}
                   />
                 </div>
                 <span className="text-sm text-gray-600">
-                  {stats.ratingDistribution[star] || 0}
+                  {ratingDistribution[star] || 0}
                 </span>
               </div>
             ))}
@@ -251,7 +299,8 @@ const RestaurantReviews = ({ restaurantId }) => {
 
       {/* Review Form Modal */}
       {showReviewForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+          style={{ backgroundColor: "rgba(0,0,0,0.3)" }}>
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-bold mb-4">Write a Review</h3>
             <form onSubmit={handleCreateReview}>
@@ -291,7 +340,7 @@ const RestaurantReviews = ({ restaurantId }) => {
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                 >
                   Submit
                 </button>
@@ -301,7 +350,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                     setShowReviewForm(false);
                     setFormError('');
                   }}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                  className="cursor-pointer bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
                 >
                   Cancel
                 </button>
@@ -354,7 +403,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                   >
                     Save
                   </button>
@@ -392,13 +441,13 @@ const RestaurantReviews = ({ restaurantId }) => {
                     <div className="flex gap-2">
                       <button
                         onClick={() => startEdit(review)}
-                        className="text-blue-600 hover:underline text-sm"
+                        className="cursor-pointer text-blue-600 hover:underline text-sm"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => setConfirmDelete(review._id)}
-                        className="text-red-600 hover:underline text-sm"
+                        className="cursor-pointer text-red-600 hover:underline text-sm"
                       >
                         Delete
                       </button>
@@ -412,7 +461,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                 <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                   <button
                     onClick={() => handleMarkHelpful(review._id)}
-                    className="hover:text-blue-600"
+                    className="cursor-pointer hover:text-blue-600"
                   >
                     Helpful
                   </button>
@@ -451,7 +500,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                         <div className="flex gap-2 mt-2">
                           <button
                             type="submit"
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+                            className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
                           >
                             Submit
                           </button>
@@ -461,7 +510,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                               setRespondingTo(null);
                               setResponseText('');
                             }}
-                            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 text-sm"
+                            className="cursor-pointer bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 text-sm"
                           >
                             Cancel
                           </button>
@@ -470,7 +519,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                     ) : (
                       <button
                         onClick={() => setRespondingTo(review._id)}
-                        className="mt-2 text-blue-600 hover:underline text-sm"
+                        className="cursor-pointer mt-2 text-blue-600 hover:underline text-sm"
                       >
                         Respond
                       </button>
@@ -482,20 +531,20 @@ const RestaurantReviews = ({ restaurantId }) => {
 
             {/* Delete Confirmation */}
             {confirmDelete === review._id && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="fixed inset-0 bg-gray bg-opacity-70 flex items-center justify-center z-50" style={{ backgroundColor: "rgba(0,0,0,0.3)" }}>
                 <div className="bg-white rounded-lg p-6 max-w-sm">
                   <h3 className="text-lg font-bold mb-4">Delete Review?</h3>
                   <p className="mb-4">Are you sure you want to delete this review?</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleDeleteReview(review._id)}
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                      className="cursor-pointer bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                     >
                       Confirm
                     </button>
                     <button
                       onClick={() => setConfirmDelete(null)}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                      className="cursor-pointer bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
                     >
                       Cancel
                     </button>
