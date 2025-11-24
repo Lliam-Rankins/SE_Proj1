@@ -142,4 +142,45 @@ describe('profileService', () => {
       await expect(profileService.updateAddress(addressData)).rejects.toThrow('Address update failed');
     });
   });
+
+  describe('updateRewardPoints', () => {
+    it('calls PATCH /users/:id/points with correct data', async () => {
+      const mockResponse = {
+        success: true,
+        rewardPoints: 20,
+        rewardsIssued: 0,
+        rewards: []
+      };
+      api.patch.mockResolvedValue({ data: mockResponse });
+
+      const res = await profileService.updateRewardPoints('user1', 20);
+
+      expect(api.patch).toHaveBeenCalledWith('/users/user1/points', { points: 20 });
+      expect(res.rewardPoints).toBe(20);
+      expect(res.rewardsIssued).toBe(0);
+    });
+
+    it('issues rewards when points reach 100', async () => {
+      const mockResponse = {
+        success: true,
+        rewardPoints: 0,
+        rewardsIssued: 1,
+        rewards: [{ amount: 5, issuedAt: new Date() }]
+      };
+      api.patch.mockResolvedValue({ data: mockResponse });
+
+      const res = await profileService.updateRewardPoints('user1', 100);
+
+      expect(api.patch).toHaveBeenCalledWith('/users/user1/points', { points: 100 });
+      expect(res.rewardsIssued).toBe(1);
+      expect(res.rewardPoints).toBe(0);
+    });
+
+    it('throws error when update fails', async () => {
+      api.patch.mockRejectedValue(new Error('Failed to update points'));
+
+      await expect(profileService.updateRewardPoints('user1', 50))
+        .rejects.toThrow('Failed to update points');
+    });
+  });
 });

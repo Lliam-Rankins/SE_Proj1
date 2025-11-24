@@ -12,4 +12,11 @@ export const profileService = {
     const response = await api.post('/profile/address', addressData);
     return response.data;
   },
+
+  async updateRewardPoints(userId, points) {
+    const res = await api.patch(`/users/${userId}/points`, { points });
+    return res.data;
+  }
 };
+
+

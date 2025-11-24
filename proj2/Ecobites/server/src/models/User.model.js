@@ -72,7 +72,13 @@ const userSchema = new mongoose.Schema({
   rewardPoints: {
     type: Number,
     default: 0
-  }
+  },
+  rewardHistory: [
+    {
+      amount: { type: Number, default: 5 },
+      issuedAt: { type: Date, default: Date.now }
+    }
+  ]
 }, {
   timestamps: true
 });
