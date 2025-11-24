@@ -157,6 +157,7 @@ export default function Restaurants() {
             restaurantId={user._id} 
             averageRating={restaurant?.averageRating}
             totalReviews={restaurant?.totalReviews || 0}
+            ratingDistribution={restaurant.ratingDistribution}
           />     
         )}
 

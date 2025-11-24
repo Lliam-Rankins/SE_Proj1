@@ -44,6 +44,7 @@ const Customer = () => {
               // Add default values for missing fields
               rating: restaurant.averageRating ?? 0,
               totalReviews: restaurant.totalReviews,
+              ratingDistribution: restaurant.ratingDistribution,
               deliveryTime: '30-45', // Default delivery time
               image: '🍽️', // Default image
               description: `${restaurant.restaurantName || restaurant.name || 'Restaurant'} - ${cuisineArray.join(' & ')} cuisine`,
@@ -98,7 +99,6 @@ const Customer = () => {
 
     fetchMenuItems();
   }, [selectedRestaurant?.id, setSelectedRestaurant]);
-
 
   const [query, setQuery] = useState('');
   const [showSeasonalNudge, setShowSeasonalNudge] = useState(false);
@@ -394,7 +394,7 @@ const Customer = () => {
                         </div>
                         <div className="mt-3 flex gap-2">
                           <button 
-                            onClick={() => {
+                            onClick={async () => {
                               setSelectedRestaurant(r);
                               fetchMenu(r.id);
                               setShowReviews(true);
@@ -425,6 +425,7 @@ const Customer = () => {
           restaurantId={selectedRestaurant?.id}
           averageRating={selectedRestaurant?.averageRating}
           totalReviews={selectedRestaurant?.totalReviews || 0}
+          ratingDistribution={selectedRestaurant?.ratingDistribution || {}}
           onRatingUpdate={(newAvg) => {
             setSelectedRestaurant(prev => ({
               ...prev,

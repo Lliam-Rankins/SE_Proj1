@@ -4,7 +4,7 @@ import { reviewService } from '../api/services/review.service';
 import { useAuth } from '../hooks/useAuth';
 import { restaurantService } from '../api/services/restaurant.service';
 
-const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, onRatingUpdate }) => {
+const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, ratingDistribution, onRatingUpdate }) => {
   const { user } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [avg, setAvg] = useState(averageRating || 0);
@@ -130,11 +130,6 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, onRating
 
       await fetchReviews();
 
-
-      //fetchReviews();
-      // Refetch updated restaurant info
-      // const updatedRestaurant = await reviewService.getById(selectedRestaurant.id);
-      //setSelectedRestaurant(updatedRestaurant);
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to create review');
     }
@@ -247,6 +242,7 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, onRating
     return <div className="p-4 text-red-600">Error: {error}</div>;
   }
 
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Stats Section */}
@@ -268,7 +264,7 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, onRating
         </div>
 
         {/* Rating Distribution */}
-        {stats.ratingDistribution && (
+        {ratingDistribution && (
           <div className="space-y-2">
             {[5, 4, 3, 2, 1].map((star) => (
               <div key={star} className="flex items-center gap-2">
@@ -285,15 +281,15 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, onRating
                     className="bg-yellow-400 h-2 rounded"
                     style={{
                       width: `${
-                        stats.totalReviews > 0
-                          ? ((stats.ratingDistribution[star] || 0) / stats.totalReviews) * 100
+                        totalReviews > 0
+                          ? ((ratingDistribution[star] || 0) / totalReviews) * 100
                           : 0
                       }%`
                     }}
                   />
                 </div>
                 <span className="text-sm text-gray-600">
-                  {stats.ratingDistribution[star] || 0}
+                  {ratingDistribution[star] || 0}
                 </span>
               </div>
             ))}
