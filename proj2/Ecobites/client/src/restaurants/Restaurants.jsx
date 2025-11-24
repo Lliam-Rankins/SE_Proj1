@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import RestaurantReviews from './RestaurantReviews';
+import { useAuthContext } from '../context/AuthContext';
+import { restaurantService } from '../api/services/restaurant.service';
 
 
 const Restaurant = () => {
@@ -94,8 +99,26 @@ const Restaurant = () => {
   };
 
 export default function Restaurants() {
+  const { user } = useAuthContext();
+  const [restaurant, setRestaurant] = useState(null);
+
+  useEffect(() => {
+    if (!user?._id) return;
+
+    const fetchRestaurant = async () => {
+      try {
+        const response = await restaurantService.getById(user._id);
+        setRestaurant(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchRestaurant();
+  }, [user])
+
   return (
-    <div className="p-6">
+    <div className="p-6 pt-25">
       <h1 className="text-3xl font-bold mb-2">Restaurants</h1>
       <p className="text-gray-600 mb-8">Manage your menu and handle incoming customer orders.</p>
 
@@ -126,6 +149,19 @@ export default function Restaurants() {
           </div>
         </Link>
       </div>
+
+      <div className="bg-white rounded-xl p-6 shadow-md mt-15">
+        <p className="text-2xl font-bold">Your Reviews & Ratings</p>
+        {restaurant && (
+          <RestaurantReviews 
+            restaurantId={user._id} 
+            averageRating={restaurant?.averageRating}
+            totalReviews={restaurant?.totalReviews || 0}
+          />     
+        )}
+
+      </div>
+      
     </div>
   );
 }

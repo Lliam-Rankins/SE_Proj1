@@ -504,7 +504,7 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, onRating
                         <div className="flex gap-2 mt-2">
                           <button
                             type="submit"
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+                            className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
                           >
                             Submit
                           </button>
@@ -514,7 +514,7 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, onRating
                               setRespondingTo(null);
                               setResponseText('');
                             }}
-                            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 text-sm"
+                            className="cursor-pointer bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 text-sm"
                           >
                             Cancel
                           </button>
@@ -523,7 +523,7 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, onRating
                     ) : (
                       <button
                         onClick={() => setRespondingTo(review._id)}
-                        className="mt-2 text-blue-600 hover:underline text-sm"
+                        className="cursor-pointer mt-2 text-blue-600 hover:underline text-sm"
                       >
                         Respond
                       </button>
