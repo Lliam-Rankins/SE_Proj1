@@ -51,3 +51,43 @@ export const updateAddress = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const updateRewardPoints = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { points } = req.body;
+
+    if (typeof points !== "number") {
+      return res.status(400).json({ success: false, message: "Points must be a number" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Add points
+    user.rewardPoints += points;
+
+    // Auto-generate $5 rewards for every 100 points
+    let rewardsIssued = 0;
+    while (user.rewardPoints >= 100) {
+      user.rewardPoints -= 100;
+      user.rewardHistory.push({ amount: 5 });
+      rewardsIssued++;
+    }
+
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: "Points updated successfully",
+      rewardPoints: user.rewardPoints,
+      rewardsIssued,
+      rewards: user.rewardHistory
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

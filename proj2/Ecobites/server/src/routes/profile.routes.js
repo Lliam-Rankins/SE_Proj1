@@ -10,4 +10,6 @@ router.post('/geocode', protect, geocodeOnly);
 // Update address and geocode (for saving to profile)
 router.post('/address', protect, updateAddress);
 
+router.patch("/users/:userId/points", authMiddleware, updateRewardPoints);
+
 export default router;
