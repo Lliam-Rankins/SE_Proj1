@@ -5,6 +5,7 @@ import { restaurantService } from '../api/services/restaurant.service.js';
 import { menuService } from '../api/services/menu.service.js';
 import { useRestaurantContext } from '../context/RestaurantContext';
 import RestaurantReviews from '../restaurants/RestaurantReviews.jsx';
+import { reviewService } from '../api/services/review.service.js';
 
 
 const Customer = () => {
@@ -28,6 +29,7 @@ const Customer = () => {
               ? restaurant.cuisine
               : (restaurant.cuisine ? [restaurant.cuisine] : []);
             const addr = restaurant.address || {};
+
             return {
               id: restaurant._id,
               name: restaurant.restaurantName || restaurant.name || 'Restaurant',
@@ -40,7 +42,8 @@ const Customer = () => {
                 : 'Address unavailable',
               isAvailable: (restaurant.isAvailable ?? true),
               // Add default values for missing fields
-              rating: 4.5, // Default rating
+              rating: restaurant.averageRating ?? 0,
+              totalReviews: restaurant.totalReviews,
               deliveryTime: '30-45', // Default delivery time
               image: '🍽️', // Default image
               description: `${restaurant.restaurantName || restaurant.name || 'Restaurant'} - ${cuisineArray.join(' & ')} cuisine`,
@@ -303,6 +306,8 @@ const Customer = () => {
                 <div>
                   <h2 className="text-2xl font-bold">{selectedRestaurant.name}</h2>
                   <p className="text-sm text-gray-500">{selectedRestaurant.cuisine} • {selectedRestaurant.deliveryTime} mins</p>
+                  <div className="text-yellow-500 font-bold">⭐ {selectedRestaurant.rating?.toFixed(1) || 0}</div>
+                  <div className="text-gray-500 text-sm">{selectedRestaurant.totalReviews} reviews</div> 
                 </div>
                 <div className="flex items-center gap-2">
                   <button 
@@ -379,7 +384,8 @@ const Customer = () => {
                             <p className="text-sm text-gray-500 mt-1">{r.description}</p>
                           </div>
                           <div className="text-right">
-                            <div className="text-yellow-500 font-bold">⭐ {r.rating}</div>
+                            <div className="text-yellow-500 font-bold">⭐ {r.rating?.toFixed(1) || 0}</div>
+                            <div className="text-gray-500 text-sm">{r.totalReviews} reviews</div> 
                             <div className="text-sm text-gray-400">{r.deliveryTime} mins</div>
                           </div>
                         </div>
@@ -417,6 +423,14 @@ const Customer = () => {
         <div className="bg-white rounded-xl p-6 shadow-md mt-6">
         <RestaurantReviews
           restaurantId={selectedRestaurant?.id}
+          averageRating={selectedRestaurant?.averageRating}
+          totalReviews={selectedRestaurant?.totalReviews || 0}
+          onRatingUpdate={(newAvg) => {
+            setSelectedRestaurant(prev => ({
+              ...prev,
+              averageRating: newAvg
+            }));
+          }}
           onClose={() => setShowReviews(false)}
         />
         </div>

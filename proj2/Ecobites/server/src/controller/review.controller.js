@@ -65,11 +65,21 @@ export const createReview = async (req, res) => {
     // Update restaurant's average rating
     await Review.updateRestaurantRating(restaurantId);
 
+    // get updated res info
+    const restaurant = await User.findById(restaurantId);
+
     // Return review with populated customer info
     const populatedReview = await Review.findById(review._id)
       .populate('customerId', 'name email');
 
-    res.status(201).json(populatedReview);
+    res.status(201).json( {
+      review: populatedReview,
+      stats: {
+        averageRating: restaurant?.restaurantInfo?.averageRating || 0,
+        totalReviews: restaurant?.restaurantInfo?.totalReviews || 0,
+        ratingDistribution: restaurant?.restaurantInfo?.ratingDistribution || {},
+        detailedRatings: restaurant?.restaurantInfo?.detailedRatings || {}
+      }});
   } catch (error) {
     console.error('createReview error:', error);
     res.status(500).json({ 
@@ -165,11 +175,20 @@ export const updateReview = async (req, res) => {
     // Update restaurant's average rating
     await Review.updateRestaurantRating(review.restaurantId);
 
+    const restaurant = await User.findById(review.restaurantId);
+
     // Return populated review
     const updatedReview = await Review.findById(review._id)
       .populate('customerId', 'name email');
 
-    res.json(updatedReview);
+    res.json({
+      review: updatedReview,
+      stats: {
+        averageRating: restaurant?.restaurantInfo?.averageRating || 0,
+        totalReviews: restaurant?.restaurantInfo?.totalReviews || 0,
+        ratingDistribution: restaurant?.restaurantInfo?.ratingDistribution || {},
+        detailedRatings: restaurant?.restaurantInfo?.detailedRatings || {}
+      }});
   } catch (error) {
     console.error('updateReview error:', error);
     res.status(500).json({ 
@@ -199,9 +218,17 @@ export const deleteReview = async (req, res) => {
     // Update restaurant's average rating
     await Review.updateRestaurantRating(restaurantId);
 
+    const restaurant = await User.findById(restaurantId);
+
     res.json({ 
       success: true,
-      message: 'Review deleted successfully' 
+      message: 'Review deleted successfully',
+      stats: {
+        averageRating: restaurant?.restaurantInfo?.averageRating || 0,
+        totalReviews: restaurant?.restaurantInfo?.totalReviews || 0,
+        ratingDistribution: restaurant?.restaurantInfo?.ratingDistribution || {},
+        detailedRatings: restaurant?.restaurantInfo?.detailedRatings || {}
+      } 
     });
   } catch (error) {
     console.error('deleteReview error:', error);

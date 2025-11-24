@@ -1,10 +1,13 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { reviewService } from '../api/services/review.service';
 import { useAuth } from '../hooks/useAuth';
+import { restaurantService } from '../api/services/restaurant.service';
 
-const RestaurantReviews = ({ restaurantId }) => {
+const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, onRatingUpdate }) => {
   const { user } = useAuth();
   const [reviews, setReviews] = useState([]);
+  const [avg, setAvg] = useState(averageRating || 0);
   const [stats, setStats] = useState({
     averageRating: 0,
     totalReviews: 0,
@@ -41,8 +44,25 @@ const RestaurantReviews = ({ restaurantId }) => {
   const [responseText, setResponseText] = useState('');
 
   useEffect(() => {
+    const fetchRestaurant = async () => {
+      try {
+        const data = await restaurantService.getById(restaurantId);
+        setSelectedRestaurant(data);
+      } catch (error) {
+        console.error('Failed to fetch restaurant:', error)
+      }
+    }
+
+    fetchRestaurant();
+  }, [restaurantId]);
+
+  useEffect(() => {
     fetchReviews();
   }, [restaurantId, pagination.page, filterRating]);
+
+  useEffect(() => {
+    setAvg(averageRating);
+  }, [averageRating]);
 
   const fetchReviews = async () => {
     try {
@@ -63,6 +83,15 @@ const RestaurantReviews = ({ restaurantId }) => {
       setReviews(data.reviews);
       setStats(data.stats);
       setPagination(data.pagination);
+
+      // Calculate average rating & notify parent 
+      if (data.reviews && data.reviews.length > 0 && onRatingUpdate) {
+        const avg = data.reviews.reduce((sum, r) => sum + r.rating, 0) / data.reviews.length;
+        onRatingUpdate(avg);
+      } else if (onRatingUpdate) {
+        // No reviews => set average to 0
+        onRatingUpdate(0);
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch reviews');
     } finally {
@@ -81,12 +110,16 @@ const RestaurantReviews = ({ restaurantId }) => {
     }
 
     try {
-      await reviewService.create({
+      const response = await reviewService.create({
         restaurantId,
         rating: parseInt(formData.rating),
         comment: formData.comment,
         ratings: formData.ratings
       });
+
+      const { review, stats } = response;
+      setReviews(prev => [review, ...prev]); // add new review to state
+      setStats(stats); // update avg rating
 
       setShowReviewForm(false);
       setFormData({
@@ -95,10 +128,13 @@ const RestaurantReviews = ({ restaurantId }) => {
         ratings: { food: 5, service: 5, delivery: 5, value: 5 }
       });
 
-      fetchReviews();
+      await fetchReviews();
+
+
+      //fetchReviews();
       // Refetch updated restaurant info
-      const updatedRestaurant = await reviewService.getById(selectedRestaurant.id);
-      setSelectedRestaurant(updatedRestaurant);
+      // const updatedRestaurant = await reviewService.getById(selectedRestaurant.id);
+      //setSelectedRestaurant(updatedRestaurant);
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to create review');
     }
@@ -115,11 +151,15 @@ const RestaurantReviews = ({ restaurantId }) => {
     }
 
     try {
-      await reviewService.update(editingReview._id, {
+      const response = await reviewService.update(editingReview._id, {
         rating: parseInt(formData.rating),
         comment: formData.comment,
         ratings: formData.ratings
       });
+
+      const { review, stats } = response;
+      setReviews(prev => prev.map(r => r._id === review._id ? review : r));
+      setStats(stats);
 
       setEditingReview(null);
       setFormData({
@@ -127,7 +167,9 @@ const RestaurantReviews = ({ restaurantId }) => {
         comment: '',
         ratings: { food: 5, service: 5, delivery: 5, value: 5 }
       });
+
       fetchReviews();
+
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to update review');
     }
@@ -135,7 +177,12 @@ const RestaurantReviews = ({ restaurantId }) => {
 
   const handleDeleteReview = async (reviewId) => {
     try {
-      await reviewService.delete(reviewId);
+      const response = await reviewService.delete(reviewId);
+
+      const { stats } = response;
+      setReviews(prev => prev.filter(r => r._id !== reviewId));
+      setStats(stats);
+
       setConfirmDelete(null);
       fetchReviews();
     } catch (err) {
@@ -206,8 +253,8 @@ const RestaurantReviews = ({ restaurantId }) => {
       <div className="mb-6 bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-4xl font-bold">{stats.averageRating.toFixed(1)}</div>
-            <div className="text-gray-600">{stats.totalReviews}  reviews</div>
+            <div className="text-4xl font-bold">{avg?.toFixed(1) || 0}</div>
+            <div className="text-gray-600">{totalReviews || 0} reviews</div>
           </div>
           
           {user && user.role === 'customer' && !isRestaurantOwner() && (
