@@ -187,8 +187,8 @@ const Checkout = () => {
       
       if (response) {
         // points to award
-        const pointsFromPackaging = ECO_REWARDS[packagingChoices] || 0;
-        await profileService.updateRewardPoints(customerId, pointsFromPackaging);
+       // const pointsFromPackaging = ECO_REWARDS[packagingPreference] || 0;
+       // await profileService.updateRewardPoints(customerId, pointsFromPackaging);
         
         if(selectedRewardId) {
           try {

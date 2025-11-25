@@ -387,7 +387,15 @@ export const updateOrderStatus = async (req, res) => {
     try {
       // If delivered and eco rewards not yet credited, credit to customer
       if (status === 'DELIVERED' && order.ecoRewardPoints > 0 && !order.ecoRewardCredited) {
-        await User.findByIdAndUpdate(order.customerId, { $inc: { rewardPoints: order.ecoRewardPoints } });
+        req.params.userId = order.customerId;
+        req.body.points = order.ecoRewardPoints;
+
+        await updateRewardPoints(req, {
+          json: () => {},
+          status: () => ({ json: () => {} })
+        });
+        
+        //await User.findByIdAndUpdate(order.customerId, { $inc: { rewardPoints: order.ecoRewardPoints } });
         order.ecoRewardCredited = true;
       }
 
