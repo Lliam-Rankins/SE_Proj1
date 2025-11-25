@@ -14,7 +14,12 @@ export const profileService = {
   },
 
   async updateRewardPoints(userId, points) {
-    const res = await api.patch(`/users/${userId}/points`, { points });
+    const res = await api.patch(`/profile/users/${userId}/points`, { points });
+    return res.data;
+  },
+
+  async markRewardUsed(userId, rewardId){
+    const res = await api.patch(`/profile/users/${userId}/rewards/${rewardId}/use`);
     return res.data;
   }
 };

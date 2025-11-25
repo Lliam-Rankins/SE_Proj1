@@ -76,7 +76,8 @@ const userSchema = new mongoose.Schema({
   rewardHistory: [
     {
       amount: { type: Number, default: 5 },
-      issuedAt: { type: Date, default: Date.now }
+      issuedAt: { type: Date, default: Date.now },
+      used: { type: Boolean, default: false}
     }
   ]
 }, {
