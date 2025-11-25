@@ -11,6 +11,13 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, refreshUser } = useAuthContext();
   const cart = location.state?.cart || [];
+  const rewards = user?.rewardHistory ?? [];
+  const availableRewards = rewards.filter(r => r.amount === 5 && !r.used);
+  const [useReward, setUseReward] = useState(false);
+  const [selectedRewardId, setSelectedRewardId] = useState(null);
+  const REWARD_AMOUNT = 5;
+
+  console.log("rewards:", user.rewardHistory)
 
   // Try to refresh user from backend on mount to get latest data including address
   React.useEffect(() => {
@@ -86,9 +93,12 @@ const Checkout = () => {
   };
 
   const getTotal = () => {
-    return cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0).toFixed(2);
+    const total = cart.reduce(
+      (sum, item) => sum + item.price * (item.quantity || 1), 0
+    );
+    return Math.max(0, total - (useReward ? REWARD_AMOUNT : 0)).toFixed(2);
+    //return cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0).toFixed(2);
   };
-
 
   const handleAddressChange = (e) => {
     const newAddress = { ...deliveryAddress, [e.target.name]: e.target.value };
@@ -168,7 +178,8 @@ const Checkout = () => {
         total: totalClient,
         paymentMethod: paymentMethod,
         specialInstructions: '',
-        packagingPreference
+        packagingPreference,
+        rewardUsed: selectedRewardId
       };
       
       // Create the order
@@ -178,13 +189,25 @@ const Checkout = () => {
         // points to award
         const pointsFromPackaging = ECO_REWARDS[packagingChoices] || 0;
         await profileService.updateRewardPoints(customerId, pointsFromPackaging);
-        if (refreshUser) await refreshUser();
         
+        if(selectedRewardId) {
+          try {
+            await profileService.markRewardUsed(customerId, selectedRewardId);
+          } catch (error) {
+            console.error("Failed to mark reward used:", error);
+          }
+        }
+        
+        if (refreshUser) await refreshUser();
+
         // Clear cart and redirect to order status page
         navigate('/customer/orders');
       } else {
         throw new Error('Failed to create order');
       }
+
+
+
     } catch (error) {
       console.error('Order creation failed:', error);
       alert('Failed to create order. Please try again.');
@@ -219,31 +242,62 @@ const Checkout = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
           {/* Order Summary */}
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-emerald-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                <span className="text-emerald-600 text-sm font-bold">🛒</span>
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-emerald-100">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                <span className="text-emerald-600 text-lg">🛒</span>
               </div>
-              <h2 className="text-xl font-semibold text-gray-800">Order Summary</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">Order Summary</h2>
             </div>
-            <ul className="divide-y divide-gray-100">
+
+            {/* Cart Items */}
+            <ul className="divide-y divide-gray-200 mb-4">
               {cart.map((item, idx) => (
-                <li key={idx} className="py-3 flex justify-between">
-                  <div>
-                    <div className="font-medium text-gray-800">{item.name}</div>
-                    <div className="text-sm text-gray-500">{item.restaurant} x {item.quantity}</div>
-                  </div>
-                  <div className="font-semibold text-emerald-600">{formatCurrency(item.price * item.quantity)}</div>
+                <li key={idx} className="py-3 flex justify-between items-center">
+                <div>
+                <div className="font-medium text-gray-800">{item.name}</div>
+                <div className="text-sm text-gray-500">{item.restaurant} × {item.quantity}</div>
+                </div>
+                <div className="font-semibold text-emerald-600">{formatCurrency(item.price * item.quantity)}</div>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 border-t border-emerald-200 pt-4 flex justify-between bg-emerald-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
+
+            {/* Reward / Discount */}
+            {availableRewards.length > 0 && (
+              <div className="flex items-center justify-between mb-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!selectedRewardId}
+                  onChange={() => {
+                    if (selectedRewardId) {
+                      setSelectedRewardId(null);
+                      setUseReward(0);
+                    } else {
+                      setSelectedRewardId(availableRewards[0]._id)
+                      setUseReward(5);
+                    }
+                  }}
+                  className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                />
+                  <span className="text-gray-700 font-medium">Use reward</span>
+                </label>
+                {useReward && (
+                  <span className="text-emerald-600 font-semibold">- {formatCurrency(5)}</span>
+                )}
+              </div>
+            )}
+
+            {/* Total */}
+            <div className="mt-4 border-t border-emerald-200 pt-4 flex justify-between items-center">
               <div className="text-lg font-semibold text-gray-800">Total</div>
-              <div className="text-lg font-bold text-emerald-600">{formatCurrency(getTotal())}</div>
+              <div className="text-xl font-bold text-emerald-600">{formatCurrency(getTotal())}</div>
             </div>
           </div>
-
 
           {/* Delivery Address */}
           <div className="bg-white rounded-xl p-6 shadow-lg border border-emerald-100">
