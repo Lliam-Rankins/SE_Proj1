@@ -6,12 +6,17 @@ import { menuService } from '../api/services/menu.service.js';
 import { useRestaurantContext } from '../context/RestaurantContext';
 import RestaurantReviews from '../restaurants/RestaurantReviews.jsx';
 import { reviewService } from '../api/services/review.service.js';
+import { userService } from '../api/services/user.service.js';
+import { useAuthContext } from '../context/AuthContext.jsx';
+import { authService } from '../api/services/auth.service.js';
 
 
 const Customer = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [points, setPoints] = useState(0);
+  const { user: authUser } = useAuthContext();
 
   // Fetch restaurants from API
   const [restaurants, setRestaurants] = useState([]);
@@ -203,6 +208,23 @@ const Customer = () => {
     navigate('/customer/checkout', { state: { cart } });
   };
 
+  // fetch user profile
+  useEffect(() => {
+    if (!authUser?._id) return;
+
+      const fetchUser = async () => {
+        try {
+          const user = await authService.fetchMe();
+          setPoints(user.rewardPoints ?? 0);
+        } catch (error){
+          console.error("Failed to fetch user points:", error);
+        }
+      };
+      fetchUser();
+  }, [authUser]);
+
+  const progress = (points / 100) * 100;
+
   return (
     <div className="min-h-screen bg-gray-50 p-6 pt-24">
       {/* Hero */}
@@ -221,80 +243,160 @@ const Customer = () => {
           </div>
         )}
   <div className="bg-linear-to-r from-emerald-600 to-emerald-400 text-white rounded-xl p-8 shadow-md flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold">Discover local eco-friendly restaurants</h1>
-            <p className="mt-2 text-emerald-100">Fresh, sustainable meals delivered fast — curated for you.</p>
-            <div className="mt-4 flex gap-2">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search restaurants or dishes..."
-                className="px-4 py-2 rounded-lg text-gray-800 w-full md:w-96"
-              />
-              <button onClick={() => { setQuery(''); setCuisineFilter('All'); }} className="px-4 py-2 bg-white text-emerald-600 rounded-lg font-semibold">Clear</button>
-            </div>
-          </div>
-          <div className="ml-auto text-right">
-            <div className="text-sm">Cart & Orders</div>
-            <div className="flex items-center gap-2 mt-2">
-              <button
-                onClick={() => navigate('/customer/orders')}
-                className="cursor-pointer bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
-                title="View Order Status"
-              >
-                📋
-              </button>
-
-              {/* Cancelled Orders */}
-              <button
-                onClick={() => navigate('/customer/cancelled-orders')}
-                className="cursor-pointer bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
-                title="View Cancelled Orders"
-              >
-                ❌
-              </button>
-
-              {/* My Bids */}
-                <button
-                  onClick={() => navigate('/customer/my-bids')}
-                  className="cursor-pointer bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
-                  title="View My Bids"
-                >
-                  💰
-              </button>
-
-              <button
-                onClick={() => setIsCartOpen((s) => !s)}
-                className="cursor-pointer bg-white text-emerald-600 px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-3 hover:bg-emerald-50 transition-colors"
-              >
-                <span className="text-lg">🛒</span>
-                <span>{cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
-                <span className="text-sm font-medium">{cart.length > 0 ? formatCurrency(getTotal()) : ''}</span>
-              </button>
-            </div>
-            {/* Ongoing Order Indicator */}
-            <div className="mt-2 text-xs text-emerald-200">
-              <span className="inline-flex items-center gap-1">
-                <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
-                Order in progress
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="mt-4 flex gap-3 flex-wrap">
-          {cuisines.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCuisineFilter(c)}
-              className={`px-3 py-1 rounded-full text-sm ${cuisineFilter === c ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700 shadow-sm'}`}
+         
+         
+         <div className="flex-1">
+          <h1 className="text-3xl md:text-4xl font-extrabold">Discover local eco-friendly restaurants</h1>
+          <p className="mt-2 text-emerald-100">Fresh, sustainable meals delivered fast — curated for you.</p>
+          
+          <div className="mt-4 flex gap-2 items-center">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search restaurants or dishes..."
+              className="px-4 py-2 rounded-lg text-gray-800 flex-1 md:flex-none md:w-96"
+            />
+            <button 
+              onClick={() => { setQuery(''); setCuisineFilter('All'); }} 
+              className="px-4 py-2 bg-white text-emerald-600 rounded-lg font-semibold whitespace-nowrap"
             >
-              {c}
+              Clear
             </button>
-          ))}
+            
+            {/* Points Meter */}
+            <div className="hidden md:flex flex-col ml-4 flex-1 max-w-xs">
+              <div className="w-full bg-white/20 rounded-full h-5 overflow-hidden shadow-inner relative">
+                <div 
+                  className="h-5 bg-gradient-to-r from-white via-yellow-200 to-yellow-300 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
+                  style={{ width: `${progress}%` }}
+                >
+                  {/* Animated shine effect - sliding shimmer */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent shimmer"></div>
+                  {/* Pulsing glow overlay */}
+                  <div className="absolute inset-0 bg-yellow-400/20 animate-pulse"></div>
+                  {/* Progress percentage */}
+                  {progress > 20 && (
+                    <span className="absolute inset-0 flex items-center justify-end pr-2 text-xs font-bold text-emerald-700 drop-shadow">
+                      {progress}%
+                    </span>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs mt-1.5 text-emerald-50 font-medium flex items-center gap-1">
+                <span className="text-yellow-300 animate-pulse">✨</span>
+                {100 - points} points until your $5 reward!
+              </p>
+            </div>
+
+              <style jsx>{`
+                @keyframes shimmer {
+                  0% { transform: translateX(-100%); }
+                  100% { transform: translateX(100%); }
+                }
+                .shimmer {
+                  animation: shimmer 2s infinite;
+                }
+              `}</style>
+          </div>
+
+          {/* Mobile progress meter - shown below search on small screens */}
+          <div className="md:hidden mt-4">
+            <div className="w-full bg-white/20 rounded-full h-5 overflow-hidden shadow-inner relative">
+              <div 
+                className="h-5 bg-gradient-to-r from-white via-yellow-200 to-yellow-300 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
+                style={{ width: `${progress}%` }}
+              >
+              {/* Animated shine effect - sliding shimmer */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent shimmer"></div>
+                  {/* Pulsing glow overlay */}
+                  <div className="absolute inset-0 bg-yellow-400/20 animate-pulse"></div>
+                  {/* Progress percentage */}
+                  {progress > 20 && (
+                    <span className="absolute inset-0 flex items-center justify-end pr-2 text-xs font-bold text-emerald-700 drop-shadow">
+                      {progress}%
+                    </span>
+                  )}
+              </div>
+            </div>
+            <p className="text-xs mt-1.5 text-emerald-50 font-medium flex items-center gap-1">
+              <span className="text-yellow-300 animate-pulse">✨</span>
+              {100 - points} points until your $5 reward!
+            </p>
+          </div>
+          
+              <style jsx>{`
+                @keyframes shimmer {
+                  0% { transform: translateX(-100%); }
+                  100% { transform: translateX(100%); }
+                }
+                .shimmer {
+                  animation: shimmer 2s infinite;
+                }
+              `}</style>
         </div>
-      </header>
+
+        <div className="ml-auto text-right">
+          <div className="text-sm">Cart & Orders</div>
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              onClick={() => navigate('/customer/orders')}
+              className="cursor-pointer bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
+              title="View Order Status"
+            >
+              📋
+            </button> 
+
+            {/* Cancelled Orders */} 
+            <button
+              onClick={() => navigate('/customer/cancelled-orders')}
+              className="cursor-pointer bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
+              title="View Cancelled Orders"
+            >
+              ❌
+            </button> 
+
+            {/* My Bids */} 
+            <button
+              onClick={() => navigate('/customer/my-bids')}
+              className="cursor-pointer bg-white text-emerald-600 px-3 py-2 rounded-full font-semibold shadow-md hover:bg-emerald-50 transition-colors"
+              title="View My Bids"
+            >
+              💰
+            </button>
+
+            <button
+              onClick={() => setIsCartOpen((s) => !s)}
+              className="cursor-pointer bg-white text-emerald-600 px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-3 hover:bg-emerald-50 transition-colors"
+            >
+              <span className="text-lg">🛒</span>
+              <span>{cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
+              <span className="text-sm font-medium">{cart.length > 0 ? formatCurrency(getTotal()) : ''}</span>
+            </button>
+          </div> 
+
+          {/* Ongoing Order Indicator */}
+          <div className="mt-2 text-xs text-emerald-200">
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+              Order in progress
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="mt-4 flex gap-3 flex-wrap">
+        {cuisines.map((c) => (
+          <button
+            key={c}
+            onClick={() => setCuisineFilter(c)}
+            className={`px-3 py-1 rounded-full text-sm ${cuisineFilter === c ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700 shadow-sm'}`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+    </header>
 
   {/* Main content */}
   <main className="max-w-6xl mx-auto grid grid-cols-1 gap-6">
