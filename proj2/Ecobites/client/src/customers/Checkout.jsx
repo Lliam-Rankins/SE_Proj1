@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
@@ -174,6 +175,11 @@ const Checkout = () => {
       const response = await orderService.create(orderData);
       
       if (response) {
+        // points to award
+        const pointsFromPackaging = ECO_REWARDS[packagingChoices] || 0;
+        await profileService.updateRewardPoints(customerId, pointsFromPackaging);
+        if (refreshUser) await refreshUser();
+        
         // Clear cart and redirect to order status page
         navigate('/customer/orders');
       } else {

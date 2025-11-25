@@ -70,11 +70,19 @@ export const updateRewardPoints = async (req, res) => {
     user.rewardPoints += points;
 
     // Auto-generate $5 rewards for every 100 points
+    {/*
     let rewardsIssued = 0;
     while (user.rewardPoints >= 100) {
       user.rewardPoints -= 100;
       user.rewardHistory.push({ amount: 5 });
       rewardsIssued++;
+    } */}
+    const rewardsIssued = Math.floor(user.rewardPoints / 100);
+    if (rewardsIssued > 0){
+      for (let i = 0; i < rewardsIssued; i++){
+        user.rewardHistory.push({ amount: 5 });
+      }
+      user.rewardPoints = user.rewardPoints % 100;
     }
 
     await user.save();

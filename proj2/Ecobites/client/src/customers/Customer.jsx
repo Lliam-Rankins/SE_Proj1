@@ -223,7 +223,9 @@ const Customer = () => {
       fetchUser();
   }, [authUser]);
 
-  const progress = (points / 100) * 100;
+  const percent = points; // 20 / 100 * 100 = 20%
+  const pointsToReward = 100 - points; // 100 - 20 = 80
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 pt-24">
@@ -268,27 +270,27 @@ const Customer = () => {
               <div className="w-full bg-white/20 rounded-full h-5 overflow-hidden shadow-inner relative">
                 <div 
                   className="h-5 bg-gradient-to-r from-white via-yellow-200 to-yellow-300 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
-                  style={{ width: `${progress}%` }}
+                  style={{ width: `${percent}%` }}
                 >
                   {/* Animated shine effect - sliding shimmer */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent shimmer"></div>
                   {/* Pulsing glow overlay */}
                   <div className="absolute inset-0 bg-yellow-400/20 animate-pulse"></div>
                   {/* Progress percentage */}
-                  {progress > 20 && (
+                  {percent > 0 && (
                     <span className="absolute inset-0 flex items-center justify-end pr-2 text-xs font-bold text-emerald-700 drop-shadow">
-                      {progress}%
+                      {percent}%
                     </span>
                   )}
                 </div>
               </div>
               <p className="text-xs mt-1.5 text-emerald-50 font-medium flex items-center gap-1">
                 <span className="text-yellow-300 animate-pulse">✨</span>
-                {100 - points} points until your $5 reward!
+                {pointsToReward} points until your $5 reward!
               </p>
             </div>
 
-              <style jsx>{`
+              <style>{`
                 @keyframes shimmer {
                   0% { transform: translateX(-100%); }
                   100% { transform: translateX(100%); }
@@ -304,27 +306,27 @@ const Customer = () => {
             <div className="w-full bg-white/20 rounded-full h-5 overflow-hidden shadow-inner relative">
               <div 
                 className="h-5 bg-gradient-to-r from-white via-yellow-200 to-yellow-300 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
-                style={{ width: `${progress}%` }}
+                style={{ width: `${percent}%` }}
               >
               {/* Animated shine effect - sliding shimmer */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent shimmer"></div>
                   {/* Pulsing glow overlay */}
                   <div className="absolute inset-0 bg-yellow-400/20 animate-pulse"></div>
                   {/* Progress percentage */}
-                  {progress > 20 && (
+                  {percent > 0 && (
                     <span className="absolute inset-0 flex items-center justify-end pr-2 text-xs font-bold text-emerald-700 drop-shadow">
-                      {progress}%
+                      {percent}%
                     </span>
                   )}
               </div>
             </div>
             <p className="text-xs mt-1.5 text-emerald-50 font-medium flex items-center gap-1">
               <span className="text-yellow-300 animate-pulse">✨</span>
-              {100 - points} points until your $5 reward!
+              {pointsToReward} points until your $5 reward!
             </p>
           </div>
           
-              <style jsx>{`
+              <style>{`
                 @keyframes shimmer {
                   0% { transform: translateX(-100%); }
                   100% { transform: translateX(100%); }

@@ -107,6 +107,7 @@ import { User } from '../models/User.model.js';
 import { MenuItem } from '../models/MenuItem.model.js';
 import { calculateEcoReward, calculateDriverIncentive } from '../config/constants.js';
 import axios from 'axios';
+import { updateRewardPoints } from './profile.controller.js';
 
 // Helper function to geocode address
 async function geocodeAddress({ street, city, zipCode }) {
