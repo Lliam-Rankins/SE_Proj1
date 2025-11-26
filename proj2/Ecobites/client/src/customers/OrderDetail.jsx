@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars */
   import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { orderService } from '../api/services/order.service';
 import { useAuthContext } from '../context/AuthContext';
+import { toast } from 'react-toastify';
   // Combine with neighbors
   
 
@@ -65,18 +67,57 @@ const OrderDetail = () => {
 
   const handleCancel = async () => {
     if (!order || updating) return;
-    const confirm = window.confirm('Are you sure you want to cancel this order?');
+    const confirm = await confirmCancelOrder();
     if (!confirm) return;
     try {
       setUpdating(true);
       const updated = await orderService.updateStatus(order._id, { status: 'CANCELLED' });
       setOrder(updated);
+      toast.success("Order cancelled")
     } catch (e) {
       alert(e?.response?.data?.message || 'Failed to cancel order');
     } finally {
       setUpdating(false);
     }
   };
+
+  const confirmCancelOrder = () => {
+  return new Promise((resolve) => {
+    const toastId = toast(
+      ({ closeToast }) => (
+        <div>
+          <p>Are you sure you want to cancel this order?</p>
+
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => {
+                resolve(true);
+                toast.dismiss(toastId);
+              }}
+              className="cursor-pointer px-2 py-1 bg-red-500 text-white rounded"
+            >
+              Yes
+            </button>
+
+            <button
+              onClick={() => {
+                resolve(false);
+                toast.dismiss(toastId);
+              }}
+              className="cursor-pointer px-2 py-1 bg-gray-300 rounded"
+            >
+              No
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        autoClose: false,
+        closeOnClick: false,
+      }
+    );
+  });
+};
 
   const formatCurrency = (num) => {
     return Number(num).toLocaleString(undefined, { style: 'currency', currency: 'USD' });
@@ -158,7 +199,7 @@ const OrderDetail = () => {
           <p className="text-red-600 mb-4">Error loading order details.</p>
           <button
             onClick={() => navigate('/customer/orders')}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+            className="cursor-pointer px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
           >
             Back to Orders
           </button>
@@ -174,7 +215,7 @@ const OrderDetail = () => {
           <h1 className="text-3xl font-bold text-gray-800">Order Details</h1>
           <button
             onClick={() => navigate('/customer/orders')}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            className="cursor-pointer px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
           >
             ← Back to Orders
           </button>
@@ -233,14 +274,14 @@ const OrderDetail = () => {
               <button
                 onClick={handleCancel}
                 disabled={updating}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-60"
+                className="cursor-pointer px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-60"
               >
                 {updating ? 'Cancelling…' : 'Cancel Order'}
               </button>
               <button
                 onClick={handleCombineWithNeighbors}
                 disabled={combining}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-60"
+                className="cursor-pointer px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-60"
               >
                 {combining ? 'Combining…' : 'Combine with Neighbors'}
               </button>

@@ -5,6 +5,7 @@ import { orderService } from '../api/services/order.service';
 import { profileService } from '../api/services/profile.service';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { PACKAGING_OPTIONS, PACKAGING_LABELS, ECO_REWARDS } from '../utils/constants';
+import  { toast } from 'react-toastify';
 
 const Checkout = () => {
   const location = useLocation();
@@ -140,7 +141,7 @@ const Checkout = () => {
       const customerId = extractId(user);
       if (!customerId) {
         console.error('No authenticated customer id available on user object:', user);
-        alert('Unable to determine customer id. Please log out and log in again.');
+        toast.error("Unable to determine customer id. Please log out and log in again.");
         setIsProcessing(false);
         return;
       }
@@ -202,15 +203,14 @@ const Checkout = () => {
 
         // Clear cart and redirect to order status page
         navigate('/customer/orders');
+        toast.success("Order placed!")
       } else {
         throw new Error('Failed to create order');
       }
 
-
-
     } catch (error) {
       console.error('Order creation failed:', error);
-      alert('Failed to create order. Please try again.');
+      toast.error("Failed to create order. Please try again.");
     } finally {
       setIsProcessing(false);
     }

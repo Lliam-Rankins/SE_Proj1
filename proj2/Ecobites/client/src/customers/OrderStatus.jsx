@@ -6,6 +6,7 @@ import { bidService } from '../api/services/bid.service';
 import { useAuthContext } from '../context/AuthContext';
 import { STATUS_COLORS, ORDER_STATUS } from '../utils/constants';
 import { useCart } from '../context/useCart';
+import { toast } from 'react-toastify';
 
 const OrderStatus = () => {
   const navigate = useNavigate();
@@ -102,13 +103,11 @@ const OrderStatus = () => {
     );
 
     //const bidderId = bid.bidderId
-
-     showMessage("You have accepted a bid. Congratulations on avoiding wasting food!");
+     toast.success("You have accepted a bid. Congratulations on avoiding wasting food!");
 
     } catch (error) {
       console.error('Failed to accept bid:', error);
-      showMessage("Failed to accept bid. Please try again.");
-
+      toast.error("Failed to accept bid. Please try again.");
     }
   };
 
@@ -138,7 +137,7 @@ const OrderStatus = () => {
           <h1 className="text-3xl font-bold text-gray-800">Order History</h1>
           <button
             onClick={() => navigate('/customer')}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            className="cursor-pointer px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
           >
             ← Back to Restaurants
           </button>

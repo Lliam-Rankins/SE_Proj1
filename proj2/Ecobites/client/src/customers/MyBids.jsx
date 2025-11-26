@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { bidService } from "../api/services/bid.service";
 import { userService } from "../api/services/user.service";
+import { toast } from "react-toastify";
 
 const MyBids = () => {
   const [bids, setBids] = useState([]);
@@ -42,17 +43,57 @@ const MyBids = () => {
 
   // cancel a bid
   const handleCancelBid = async (bidId) => {
-    if(!window.confirm("Are you sure you want to cancel this bid?")) return;
+    //if(!window.confirm("Are you sure you want to cancel this bid?")) return;
+    const confirmed  = await confirmCancelBid();
+    if (!confirmed) return;
 
     try {
         await bidService.cancelBid(bidId);
         // remove cancelled bid from state
         setBids((prevBids) => prevBids.filter((b) => b._id !== bidId));
-        alert("Bid cancelled successfully");
+        toast.success("Bid cancelled successfully");
     } catch (error) {
         console.error("Failed to cancel bid:", error);
-        alert("failed to cancel bid. try again");
+        toast.error("Failed to cancel bid. Try again");
     }
+  };
+
+  const confirmCancelBid = () => {
+    return new Promise((resolve) => {
+      const toastId = toast(
+        ({ closeToast }) => (
+          <div>
+            <p>Are you sure you want to cancel this bid?</p>
+
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => {
+                  resolve(true);
+                  toast.dismiss(toastId);
+                }}
+                className="px-2 py-1 bg-red-500 text-white rounded"
+              >
+                Yes
+              </button>
+
+              <button
+                onClick={() => {
+                  resolve(false);
+                  toast.dismiss(toastId);
+                }}
+                className="px-2 py-1 bg-gray-300 rounded"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          autoClose: false,
+          closeOnClick: false,
+        }
+      );
+    });
   };
 
   // get original customer name
@@ -140,7 +181,7 @@ const MyBids = () => {
               {bid.status === "PENDING" && (
                 <button
                   onClick={() => handleCancelBid(bid._id)}
-                  className="mt-4 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded w-full transition-colors"
+                  className="cursor-pointer mt-4 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded w-full transition-colors"
                 >
                   Cancel Bid
                 </button>

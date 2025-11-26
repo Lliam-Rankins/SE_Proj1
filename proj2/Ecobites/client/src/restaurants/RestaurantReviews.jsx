@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { reviewService } from '../api/services/review.service';
 import { useAuth } from '../hooks/useAuth';
 import { restaurantService } from '../api/services/restaurant.service';
+import { toast } from 'react-toastify';
 
 const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, ratingDistribution, onRatingUpdate }) => {
   const { user } = useAuth();
@@ -129,6 +130,7 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, ratingDi
       });
 
       await fetchReviews();
+      toast.success("Review created")
 
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to create review');
@@ -164,6 +166,7 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, ratingDi
       });
 
       fetchReviews();
+      toast.success("Review updated")
 
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to update review');
@@ -180,6 +183,7 @@ const RestaurantReviews = ({ restaurantId, averageRating, totalReviews, ratingDi
 
       setConfirmDelete(null);
       fetchReviews();
+      toast.success("Review deleted")
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete review');
     }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Checkout = () => {
   const location = useLocation();
@@ -53,7 +54,7 @@ const Checkout = () => {
     setIsProcessing(true);
     // Mock processing
     setTimeout(() => {
-      alert('Order confirmed! Thank you for your purchase.');
+      toast.success('Order confirmed! Thank you for your purchase.');
       // Clear cart logic would go here if using context
       navigate('/customer');
     }, 2000);
