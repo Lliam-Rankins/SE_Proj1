@@ -9,6 +9,7 @@ import { reviewService } from '../api/services/review.service.js';
 import { userService } from '../api/services/user.service.js';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import { authService } from '../api/services/auth.service.js';
+import { toast } from 'react-toastify';
 
 
 const Customer = () => {
@@ -216,12 +217,21 @@ const Customer = () => {
         try {
           const user = await authService.fetchMe();
           setPoints(user.rewardPoints ?? 0);
+          
         } catch (error){
           console.error("Failed to fetch user points:", error);
         }
       };
       fetchUser();
   }, [authUser]);
+
+  useEffect(() => {
+  if (points >= 100) {
+    toast.success("🎉 You earned a $5 reward! Great job collecting eco-points!", {
+      toastId: "reward-earned"
+    });
+  }
+}, [points]);
 
   const percent = points; // 20 / 100 * 100 = 20%
   const pointsToReward = 100 - points; // 100 - 20 = 80

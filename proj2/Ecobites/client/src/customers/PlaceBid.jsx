@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from "react";
 import { bidService } from "../api/services/bid.service";
+import { toast } from "react-toastify";
 
 const PlaceBid = ({ order, onClose }) => {
   const orderId = order?._id;
@@ -27,7 +28,7 @@ const PlaceBid = ({ order, onClose }) => {
     setLoading(true);
     try {
       await bidService.placeBid(order._id, { bidAmount: Number(bidAmount), deliveryAddress });
-      alert("Bid placed successfully!");
+      toast.success("Bid placed successfully!");
       onClose(); // close the modal
     } catch (err) {
       console.error("Error placing bid:", err);

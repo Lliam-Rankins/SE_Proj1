@@ -23,6 +23,7 @@ import { RestaurantProvider } from './context/RestaurantContext';
 import { CartProvider } from './context/CartContext';
 import {ProtectedRoute} from './routes/ProtectedRoute';
 import { RoleBasedRoute } from './routes/RoleBasedRoute';
+import { ToastContainer  } from "react-toastify";
 
 
 function App() {
@@ -70,6 +71,7 @@ function App() {
              </main>
              <SiteFooter />
            </div>
+           <ToastContainer  />
            </CartProvider>
            </RestaurantProvider>
   );

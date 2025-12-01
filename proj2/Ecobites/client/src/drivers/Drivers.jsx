@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { useAuthContext } from "../context/AuthContext";
 import { orderService } from "../api/services/order.service";
