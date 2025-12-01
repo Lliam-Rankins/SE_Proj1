@@ -25,6 +25,7 @@ export const PACKAGING_OPTIONS = {
   REUSABLE: 'reusable',
   COMPOSTABLE: 'compostable',
   MINIMAL: 'minimal',
+  STANDARD: 'standard',
 };
 
 // Eco Reward Points per packaging type
@@ -32,6 +33,7 @@ export const ECO_REWARDS = {
   [PACKAGING_OPTIONS.REUSABLE]: 30,
   [PACKAGING_OPTIONS.COMPOSTABLE]: 20,
   [PACKAGING_OPTIONS.MINIMAL]: 10,
+  [PACKAGING_OPTIONS.STANDARD]: 0,
 };
 
 // Driver Vehicle Types
@@ -67,6 +69,6 @@ export const calculateDriverIncentive = (vehicleType) => {
 
 // Helper to calculate eco reward points
 export const calculateEcoReward = (packagingPreference) => {
-  if (!packagingPreference) return ECO_REWARDS[PACKAGING_OPTIONS.MINIMAL];
-  return ECO_REWARDS[packagingPreference] || ECO_REWARDS[PACKAGING_OPTIONS.MINIMAL];
+  if (!packagingPreference) return ECO_REWARDS[PACKAGING_OPTIONS.STANDARD];
+  return ECO_REWARDS[packagingPreference] || ECO_REWARDS[PACKAGING_OPTIONS.STANDARD];
 };

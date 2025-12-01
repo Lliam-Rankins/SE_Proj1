@@ -10,6 +10,7 @@ import { userService } from '../api/services/user.service.js';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import { authService } from '../api/services/auth.service.js';
 import { toast } from 'react-toastify';
+import { useCart } from '../context/useCart';
 
 
 const Customer = () => {
@@ -121,9 +122,16 @@ const Customer = () => {
   }, []);
   const [cuisineFilter, setCuisineFilter] = useState('All');
 
-  // Cart structure: [{ name, price, restaurant, quantity }]
-  const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const {
+    cart,
+    isCartOpen,
+    addToCart,
+    toggleCart,
+    closeCart,
+    increaseQuantity,
+    decreaseQuantity,
+    getCartTotal,
+  } = useCart();
 
   const cuisines = useMemo(() => {
     const set = new Set();
@@ -152,61 +160,9 @@ const Customer = () => {
     return Number(num).toLocaleString(undefined, { style: 'currency', currency: 'USD' });
   };
 
-  // Add item to cart; if exists, increment quantity
-  const addToCart = (item) => {
-    setCart((prev) => {
-      const idx = prev.findIndex((p) => p.name === item.name && p.restaurant === item.restaurant);
-      if (idx !== -1) {
-        const copy = [...prev];
-        copy[idx].quantity += 1;
-        return copy;
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
-    setIsCartOpen(true);
-  };
-
-  // Decrease quantity or remove
-  const removeFromCart = (index) => {
-    setCart((prev) => {
-      const copy = [...prev];
-      if (copy[index].quantity > 1) {
-        copy[index].quantity -= 1;
-      } else {
-        copy.splice(index, 1);
-      }
-      return copy;
-    });
-  };
-
-  // Explicit increase/decrease to avoid accidental double-calls
-  const increaseQuantity = (index) => {
-    setCart((prev) => {
-      const copy = prev.map((it, i) => (i === index ? { ...it, quantity: (it.quantity || 0) + 1 } : it));
-      return copy;
-    });
-  };
-
-  const decreaseQuantity = (index) => {
-    setCart((prev) => {
-      const copy = [...prev];
-      if (!copy[index]) return copy;
-      if (copy[index].quantity > 1) {
-        copy[index].quantity -= 1;
-      } else {
-        copy.splice(index, 1);
-      }
-      return copy;
-    });
-  };
-
-  const getTotal = () => {
-    const total = cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
-    return total.toFixed(2);
-  };
-
   const handleCheckout = () => {
-    navigate('/customer/checkout', { state: { cart } });
+    navigate('/customer/checkout');
+    closeCart();
   };
 
   // fetch user profile
@@ -377,12 +333,12 @@ const Customer = () => {
             </button>
 
             <button
-              onClick={() => setIsCartOpen((s) => !s)}
+              onClick={toggleCart}
               className="cursor-pointer bg-white text-emerald-600 px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-3 hover:bg-emerald-50 transition-colors"
             >
               <span className="text-lg">🛒</span>
               <span>{cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
-              <span className="text-sm font-medium">{cart.length > 0 ? formatCurrency(getTotal()) : ''}</span>
+              <span className="text-sm font-medium">{cart.length > 0 ? formatCurrency(getCartTotal()) : ''}</span>
             </button>
           </div> 
 
@@ -560,7 +516,7 @@ const Customer = () => {
             <h3 className="font-semibold">Your Cart</h3>
             <div className="flex items-center gap-2">
               <div className="text-sm text-gray-500">{cart.reduce((s, i) => s + (i.quantity || 1), 0)} items</div>
-              <button onClick={() => setIsCartOpen(false)} className="text-gray-500 hover:text-gray-800">✕</button>
+              <button onClick={closeCart} className="text-gray-500 hover:text-gray-800">✕</button>
             </div>
           </div>
 
@@ -589,7 +545,7 @@ const Customer = () => {
           <div className="mt-4 border-t pt-4">
             <div className="flex justify-between items-center mb-3">
               <div className="text-sm text-gray-600">Subtotal</div>
-              <div className="font-bold">{formatCurrency(getTotal())}</div>
+              <div className="font-bold">{formatCurrency(getCartTotal())}</div>
             </div>
             <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full bg-emerald-600 text-white py-2 rounded font-semibold disabled:opacity-60">Checkout</button>
           </div>

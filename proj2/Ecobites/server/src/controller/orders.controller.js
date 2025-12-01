@@ -183,9 +183,9 @@ export const createOrder = async (req, res) => {
     const restaurantId = bodyRestaurantId && bodyRestaurantId.toString() === restaurantIdFromItems ? bodyRestaurantId : restaurantIdFromItems;
 
     // Compute eco reward points based on packaging preference using constant
-    const selectedPackaging = ['reusable', 'compostable', 'minimal'].includes(packagingPreference)
+    const selectedPackaging = ['reusable', 'compostable', 'minimal', 'standard'].includes(packagingPreference)
       ? packagingPreference
-      : 'minimal';
+      : 'standard';
     // Seasonal highlights bonus: sum per item
     const seasonalBonus = items.reduce((sum, it) => {
       const mi = menuItems.find(m => m._id.toString() === it.menuItemId.toString());

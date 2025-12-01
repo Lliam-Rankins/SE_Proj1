@@ -6,19 +6,38 @@ import { profileService } from '../api/services/profile.service';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { PACKAGING_OPTIONS, PACKAGING_LABELS, ECO_REWARDS } from '../utils/constants';
 import  { toast } from 'react-toastify';
+import { useCart } from '../context/useCart';
+
+const getStoredPackagingPreference = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem('ecobites_packaging_pref');
+  } catch (error) {
+    console.warn('Unable to read stored packaging preference', error);
+    return null;
+  }
+};
+
+const derivePackagingPreference = (user) => {
+  const stored = getStoredPackagingPreference();
+  if (stored && Object.values(PACKAGING_OPTIONS).includes(stored)) {
+    return stored;
+  }
+  return user?.preferences?.packaging || PACKAGING_OPTIONS.STANDARD;
+};
 
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, refreshUser } = useAuthContext();
-  const cart = location.state?.cart || [];
+  const { cart, clearCart } = useCart();
   const rewards = user?.rewardHistory ?? [];
   const availableRewards = rewards.filter(r => r.amount === 5 && !r.used);
   const [useReward, setUseReward] = useState(false);
   const [selectedRewardId, setSelectedRewardId] = useState(null);
   const REWARD_AMOUNT = 5;
 
-  console.log("rewards:", user.rewardHistory)
+  console.log("rewards:", user?.rewardHistory);
 
   // Try to refresh user from backend on mount to get latest data including address
   React.useEffect(() => {
@@ -62,7 +81,44 @@ const Checkout = () => {
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [packagingPreference, setPackagingPreference] = useState(PACKAGING_OPTIONS.MINIMAL);
+  const [packagingPreference, setPackagingPreference] = useState(() => derivePackagingPreference(user));
+
+  React.useEffect(() => {
+    const nextPreference = derivePackagingPreference(user);
+    setPackagingPreference(nextPreference);
+
+    if (user?.preferences?.packaging) {
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('ecobites_packaging_pref', user.preferences.packaging);
+        }
+      } catch (error) {
+        console.warn('Unable to sync stored packaging preference from profile', error);
+      }
+    }
+  }, [user?.preferences?.packaging]);
+  const handlePackagingPreferenceChange = async (value) => {
+    setPackagingPreference(value);
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('ecobites_packaging_pref', value);
+      }
+    } catch (error) {
+      console.warn('Unable to persist packaging preference locally', error);
+    }
+
+    if (!isAuthenticated) return;
+
+    try {
+      await profileService.updatePreferences({ packaging: value });
+      if (refreshUser) {
+        await refreshUser();
+      }
+    } catch (error) {
+      console.warn('Unable to save packaging preference to profile', error);
+    }
+  };
+
 
   // Redirect to login when user is not authenticated. Do this in an effect
   // so hooks remain in the same order across renders.
@@ -86,7 +142,8 @@ const Checkout = () => {
   const packagingChoices = [
     { value: PACKAGING_OPTIONS.REUSABLE, label: PACKAGING_LABELS[PACKAGING_OPTIONS.REUSABLE], reward: ECO_REWARDS[PACKAGING_OPTIONS.REUSABLE], desc: 'Returnable container, highest reward' },
     { value: PACKAGING_OPTIONS.COMPOSTABLE, label: PACKAGING_LABELS[PACKAGING_OPTIONS.COMPOSTABLE], reward: ECO_REWARDS[PACKAGING_OPTIONS.COMPOSTABLE], desc: 'Compost-friendly materials' },
-    { value: PACKAGING_OPTIONS.MINIMAL, label: PACKAGING_LABELS[PACKAGING_OPTIONS.MINIMAL], reward: ECO_REWARDS[PACKAGING_OPTIONS.MINIMAL], desc: 'Reduced packaging footprint' }
+    { value: PACKAGING_OPTIONS.MINIMAL, label: PACKAGING_LABELS[PACKAGING_OPTIONS.MINIMAL], reward: ECO_REWARDS[PACKAGING_OPTIONS.MINIMAL], desc: 'Reduced packaging footprint' },
+    { value: PACKAGING_OPTIONS.STANDARD, label: PACKAGING_LABELS[PACKAGING_OPTIONS.STANDARD], reward: ECO_REWARDS[PACKAGING_OPTIONS.STANDARD], desc: 'Use default restaurant packaging (no eco bonus).' }
   ];
 
   const formatCurrency = (num) => {
@@ -187,9 +244,21 @@ const Checkout = () => {
       const response = await orderService.create(orderData);
       
       if (response) {
-        // points to award
-       // const pointsFromPackaging = ECO_REWARDS[packagingPreference] || 0;
-       // await profileService.updateRewardPoints(customerId, pointsFromPackaging);
+        const pointsFromPackaging = ECO_REWARDS[packagingPreference] || 0;
+        try {
+          await profileService.updateRewardPoints(customerId, pointsFromPackaging);
+        } catch (error) {
+          console.error('Failed to update reward points:', error);
+        }
+
+        try {
+          await profileService.updatePreferences({ packaging: packagingPreference });
+          if (refreshUser) {
+            await refreshUser();
+          }
+        } catch (error) {
+          console.error('Failed to save packaging preference after checkout:', error);
+        }
         
         if(selectedRewardId) {
           try {
@@ -199,9 +268,7 @@ const Checkout = () => {
           }
         }
         
-        if (refreshUser) await refreshUser();
-
-        // Clear cart and redirect to order status page
+        clearCart();
         navigate('/customer/orders');
         toast.success("Order placed!")
       } else {
@@ -501,7 +568,7 @@ const Checkout = () => {
                       name="packagingPreference"
                       value={choice.value}
                       checked={packagingPreference === choice.value}
-                      onChange={(e) => setPackagingPreference(e.target.value)}
+                      onChange={(e) => handlePackagingPreferenceChange(e.target.value)}
                       className="mt-1 text-emerald-600 focus:ring-emerald-500"
                     />
                     <div>

@@ -82,6 +82,7 @@ export const register = async (req, res) => {
         cuisine: user.cuisine || null,
         address: user.address || null,
         phone: user.phone || null,
+        preferences: user.preferences || {},
       },
     });
   } catch (error) {
@@ -138,6 +139,7 @@ export const login = async (req, res) => {
         cuisine: user.cuisine || null,
         address: user.address || null,
         phone: user.phone || null,
+        preferences: user.preferences || {},
       },
     });
   } catch (error) {
@@ -167,6 +169,7 @@ export const me = async (req, res) => {
         cuisine: req.user.cuisine || null,
         address: req.user.address || null,
         phone: req.user.phone || null,
+        preferences: req.user.preferences || {},
       }
     });
   } catch (error) {

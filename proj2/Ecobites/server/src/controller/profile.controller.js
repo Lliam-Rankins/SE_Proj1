@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { User } from '../models/User.model.js';
+import { PACKAGING_OPTIONS } from '../config/constants.js';
 
 // Geocode address using OpenStreetMap Nominatim
 async function geocodeAddress({ street, city, zipCode }) {
@@ -127,5 +128,31 @@ export const markRewardUsed = async (req, res) => {
     res.json({ success: true, message: 'Reward marked as used', reward });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updatePreferences = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { packaging } = req.body;
+    const allowedPackaging = Object.values(PACKAGING_OPTIONS);
+
+    if (!packaging || !allowedPackaging.includes(packaging)) {
+      return res.status(400).json({ success: false, message: 'Invalid packaging preference' });
+    }
+
+    const updated = await User.findByIdAndUpdate(
+      userId,
+      { $set: { 'preferences.packaging': packaging } },
+      { new: true }
+    ).select('-password');
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, preferences: updated.preferences });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
