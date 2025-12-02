@@ -5,8 +5,8 @@ import { profileService } from '../api/services/profile.service';
 
 const InfoRow = ({ label, value }) => (
   <div className="flex flex-col">
-    <span className="text-xs uppercase tracking-wide text-gray-500">{label}</span>
-    <span className="text-sm font-semibold text-gray-900">{value ?? '—'}</span>
+    <span className="text-xs uppercase tracking-[0.3em] text-gray-500">{label}</span>
+    <span className="text-base font-semibold text-gray-900">{value ?? '—'}</span>
   </div>
 );
 
@@ -90,20 +90,20 @@ export default function Impact() {
 
   return (
     <div className="min-h-screen bg-emerald-50/60 px-4 pt-24 pb-12">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <section className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm md:p-8">
+      <div className="mx-auto max-w-5xl space-y-8">
+        <section className="rounded-3xl border border-emerald-100 bg-white p-8 shadow-md">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">Impact view</p>
-              <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">Hi {firstName}, here is your impact</h1>
-              <p className="mt-2 max-w-xl text-sm text-gray-600">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-500">Impact view</p>
+              <h1 className="text-4xl font-bold text-gray-900 md:text-5xl">Hi {firstName}, here is your impact</h1>
+              <p className="mt-4 max-w-xl text-lg text-gray-600">
                 Track how reusable packaging choices, seasonal meals, and combined deliveries reduce CO₂, water, and packaging waste over time.
               </p>
             </div>
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-center">
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Eco Reward Balance</p>
-              <p className="text-3xl font-bold text-emerald-900">{rewardPoints}</p>
-              <p className="mt-1 text-xs text-emerald-700">points</p>
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-8 py-6 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">Eco Reward Balance</p>
+              <p className="text-4xl font-bold text-emerald-900">{rewardPoints}</p>
+              <p className="mt-1 text-sm text-emerald-700">points</p>
             </div>
           </div>
 
@@ -114,12 +114,12 @@ export default function Impact() {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm md:p-8">
+        <section className="rounded-3xl border border-emerald-100 bg-white p-8 shadow-md">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">Packaging preference</p>
-              <h2 className="text-2xl font-bold text-gray-900">Choose how your meals arrive</h2>
-              <p className="text-sm text-gray-600">Pick the option that fits your lifestyle. We’ll highlight restaurants that can honor your selection.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-500">Packaging preference</p>
+              <h2 className="text-3xl font-bold text-gray-900">Choose how your meals arrive</h2>
+              <p className="text-base text-gray-600">Pick the option that fits your lifestyle. We’ll highlight restaurants that can honor your selection.</p>
             </div>
             {(feedback || isSaving) ? (
               <div className="rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
@@ -143,7 +143,7 @@ export default function Impact() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold text-emerald-700">{choice.tagline}</p>
-                      <h3 className="text-xl font-bold text-gray-900">{choice.label}</h3>
+                      <h3 className="text-2xl font-bold text-gray-900">{choice.label}</h3>
                     </div>
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
@@ -153,8 +153,8 @@ export default function Impact() {
                       {selected ? '✓' : choice.label.slice(0, 1)}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm text-gray-600">{choice.description}</p>
-                  <p className="mt-2 text-xs font-semibold text-emerald-700">Impact: {choice.impact}</p>
+                  <p className="mt-3 text-base text-gray-600">{choice.description}</p>
+                  <p className="mt-2 text-sm font-semibold text-emerald-700">Impact: {choice.impact}</p>
                 </button>
               );
             })}

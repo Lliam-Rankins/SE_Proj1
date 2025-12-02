@@ -59,6 +59,12 @@ export default function SiteHeader({ onMenuClick, showMenuButton }) {
             <NavLink to="/" end className={navLinkClass}>
               Home
             </NavLink>
+            <NavLink 
+              to="/about" 
+              className={navLinkClass}
+            >
+              About
+            </NavLink>
             {!isAuthenticated && (
               <>
                 <NavLink 
@@ -81,12 +87,6 @@ export default function SiteHeader({ onMenuClick, showMenuButton }) {
                 </NavLink>
               </>
             )}
-            <NavLink 
-              to="/about" 
-              className={navLinkClass}
-            >
-              About
-            </NavLink>
 
             {/* Divider */}
             <div className="w-px h-6 bg-gray-300 mx-2"></div>
