@@ -13,9 +13,24 @@ import reviewRoutes from "./routes/review.routes.js";
 
 const app = express();
 
-// CORS must allow credentials for cookies to work
+// CORS configuration allows common local Vite ports for dev convenience
+const allowedOrigins = new Set([
+  process.env.CLIENT_URL || 'http://localhost:5173',
+  'http://localhost:5174'
+]);
+const devPortPattern = /^http:\/\/localhost:51\d{2}$/;
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend URL
+  origin(origin, callback) {
+    if (
+      !origin ||
+      allowedOrigins.has(origin) ||
+      devPortPattern.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 app.use(cookieParser());

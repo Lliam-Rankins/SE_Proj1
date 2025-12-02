@@ -10,6 +10,7 @@ import { userService } from '../api/services/user.service.js';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import { authService } from '../api/services/auth.service.js';
 import { toast } from 'react-toastify';
+import { useCart } from '../context/useCart';
 
 
 const Customer = () => {
@@ -121,9 +122,16 @@ const Customer = () => {
   }, []);
   const [cuisineFilter, setCuisineFilter] = useState('All');
 
-  // Cart structure: [{ name, price, restaurant, quantity }]
-  const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const {
+    cart,
+    isCartOpen,
+    addToCart,
+    toggleCart,
+    closeCart,
+    increaseQuantity,
+    decreaseQuantity,
+    getCartTotal,
+  } = useCart();
 
   const cuisines = useMemo(() => {
     const set = new Set();
@@ -152,61 +160,9 @@ const Customer = () => {
     return Number(num).toLocaleString(undefined, { style: 'currency', currency: 'USD' });
   };
 
-  // Add item to cart; if exists, increment quantity
-  const addToCart = (item) => {
-    setCart((prev) => {
-      const idx = prev.findIndex((p) => p.name === item.name && p.restaurant === item.restaurant);
-      if (idx !== -1) {
-        const copy = [...prev];
-        copy[idx].quantity += 1;
-        return copy;
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
-    setIsCartOpen(true);
-  };
-
-  // Decrease quantity or remove
-  const removeFromCart = (index) => {
-    setCart((prev) => {
-      const copy = [...prev];
-      if (copy[index].quantity > 1) {
-        copy[index].quantity -= 1;
-      } else {
-        copy.splice(index, 1);
-      }
-      return copy;
-    });
-  };
-
-  // Explicit increase/decrease to avoid accidental double-calls
-  const increaseQuantity = (index) => {
-    setCart((prev) => {
-      const copy = prev.map((it, i) => (i === index ? { ...it, quantity: (it.quantity || 0) + 1 } : it));
-      return copy;
-    });
-  };
-
-  const decreaseQuantity = (index) => {
-    setCart((prev) => {
-      const copy = [...prev];
-      if (!copy[index]) return copy;
-      if (copy[index].quantity > 1) {
-        copy[index].quantity -= 1;
-      } else {
-        copy.splice(index, 1);
-      }
-      return copy;
-    });
-  };
-
-  const getTotal = () => {
-    const total = cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
-    return total.toFixed(2);
-  };
-
   const handleCheckout = () => {
-    navigate('/customer/checkout', { state: { cart } });
+    navigate('/customer/checkout');
+    closeCart();
   };
 
   // fetch user profile
@@ -254,32 +210,32 @@ const Customer = () => {
             <button onClick={() => setShowSeasonalNudge(false)} className="text-orange-700 text-sm font-semibold">Dismiss</button>
           </div>
         )}
-  <div className="bg-linear-to-r from-emerald-600 to-emerald-400 text-white rounded-xl p-8 shadow-md flex flex-col md:flex-row items-start md:items-center gap-6">
+  <div className="bg-linear-to-r from-emerald-600 to-emerald-400 text-white rounded-3xl p-10 shadow-lg flex flex-col md:flex-row items-start md:items-center gap-6">
          
          
          <div className="flex-1">
-          <h1 className="text-3xl md:text-4xl font-extrabold">Discover local eco-friendly restaurants</h1>
-          <p className="mt-2 text-emerald-100">Fresh, sustainable meals delivered fast — curated for you.</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">Discover local eco-friendly restaurants</h1>
+          <p className="mt-4 text-lg text-emerald-100">Fresh, sustainable meals delivered fast — curated for you.</p>
           
-          <div className="mt-4 flex gap-2 items-center">
+          <div className="mt-6 flex gap-3 items-center flex-wrap">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search restaurants or dishes..."
-              className="px-4 py-2 rounded-lg text-gray-800 flex-1 md:flex-none md:w-96"
+              placeholder="Search restaurants or dishes…"
+              className="px-4 py-3 rounded-xl text-gray-900 flex-1 md:flex-none md:w-96 text-base"
             />
             <button 
               onClick={() => { setQuery(''); setCuisineFilter('All'); }} 
-              className="px-4 py-2 bg-white text-emerald-600 rounded-lg font-semibold whitespace-nowrap"
+              className="px-5 py-3 bg-white text-emerald-600 rounded-xl font-semibold whitespace-nowrap"
             >
               Clear
             </button>
             
             {/* Points Meter */}
             <div className="hidden md:flex flex-col ml-4 flex-1 max-w-xs">
-              <div className="w-full bg-white/20 rounded-full h-5 overflow-hidden shadow-inner relative">
+              <div className="w-full bg-white/20 rounded-full h-6 overflow-hidden shadow-inner relative">
                 <div 
-                  className="h-5 bg-gradient-to-r from-white via-yellow-200 to-yellow-300 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
+                  className="h-6 bg-gradient-to-r from-white via-yellow-200 to-yellow-300 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
                   style={{ width: `${percent}%` }}
                 >
                   {/* Animated shine effect - sliding shimmer */}
@@ -288,13 +244,13 @@ const Customer = () => {
                   <div className="absolute inset-0 bg-yellow-400/20 animate-pulse"></div>
                   {/* Progress percentage */}
                   {percent > 0 && (
-                    <span className="absolute inset-0 flex items-center justify-end pr-2 text-xs font-bold text-emerald-700 drop-shadow">
+                    <span className="absolute inset-0 flex items-center justify-end pr-2 text-sm font-bold text-emerald-700 drop-shadow">
                       {percent}%
                     </span>
                   )}
                 </div>
               </div>
-              <p className="text-xs mt-1.5 text-emerald-50 font-medium flex items-center gap-1">
+              <p className="text-sm mt-2 text-emerald-50 font-medium flex items-center gap-1">
                 <span className="text-yellow-300 animate-pulse">✨</span>
                 {pointsToReward} points until your $5 reward!
               </p>
@@ -313,9 +269,9 @@ const Customer = () => {
 
           {/* Mobile progress meter - shown below search on small screens */}
           <div className="md:hidden mt-4">
-            <div className="w-full bg-white/20 rounded-full h-5 overflow-hidden shadow-inner relative">
+            <div className="w-full bg-white/20 rounded-full h-6 overflow-hidden shadow-inner relative">
               <div 
-                className="h-5 bg-gradient-to-r from-white via-yellow-200 to-yellow-300 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
+                className="h-6 bg-gradient-to-r from-white via-yellow-200 to-yellow-300 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
                 style={{ width: `${percent}%` }}
               >
               {/* Animated shine effect - sliding shimmer */}
@@ -324,13 +280,13 @@ const Customer = () => {
                   <div className="absolute inset-0 bg-yellow-400/20 animate-pulse"></div>
                   {/* Progress percentage */}
                   {percent > 0 && (
-                    <span className="absolute inset-0 flex items-center justify-end pr-2 text-xs font-bold text-emerald-700 drop-shadow">
+                    <span className="absolute inset-0 flex items-center justify-end pr-2 text-sm font-bold text-emerald-700 drop-shadow">
                       {percent}%
                     </span>
                   )}
               </div>
             </div>
-            <p className="text-xs mt-1.5 text-emerald-50 font-medium flex items-center gap-1">
+            <p className="text-sm mt-2 text-emerald-50 font-medium flex items-center gap-1">
               <span className="text-yellow-300 animate-pulse">✨</span>
               {pointsToReward} points until your $5 reward!
             </p>
@@ -348,7 +304,7 @@ const Customer = () => {
         </div>
 
         <div className="ml-auto text-right">
-          <div className="text-sm">Cart & Orders</div>
+          <div className="text-sm uppercase tracking-[0.3em] text-emerald-50">Cart & Orders</div>
           <div className="flex items-center gap-2 mt-2">
             <button
               onClick={() => navigate('/customer/orders')}
@@ -377,12 +333,12 @@ const Customer = () => {
             </button>
 
             <button
-              onClick={() => setIsCartOpen((s) => !s)}
+              onClick={toggleCart}
               className="cursor-pointer bg-white text-emerald-600 px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-3 hover:bg-emerald-50 transition-colors"
             >
               <span className="text-lg">🛒</span>
               <span>{cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
-              <span className="text-sm font-medium">{cart.length > 0 ? formatCurrency(getTotal()) : ''}</span>
+              <span className="text-sm font-medium">{cart.length > 0 ? formatCurrency(getCartTotal()) : ''}</span>
             </button>
           </div> 
 
@@ -397,12 +353,12 @@ const Customer = () => {
       </div>
 
       {/* Filters */}
-      <div className="mt-4 flex gap-3 flex-wrap">
+      <div className="mt-5 flex gap-3 flex-wrap">
         {cuisines.map((c) => (
           <button
             key={c}
             onClick={() => setCuisineFilter(c)}
-            className={`px-3 py-1 rounded-full text-sm ${cuisineFilter === c ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700 shadow-sm'}`}
+            className={`px-4 py-2 rounded-full text-sm font-semibold ${cuisineFilter === c ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700 shadow-sm'}`}
           >
             {c}
           </button>
@@ -415,11 +371,11 @@ const Customer = () => {
   {/* Restaurants grid / Menu view */}
   <section>
           {selectedRestaurant ? (
-            <div className="bg-white rounded-xl p-6 shadow-md">
+            <div className="bg-white rounded-3xl p-8 shadow-lg">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold">{selectedRestaurant.name}</h2>
-                  <p className="text-sm text-gray-500">{selectedRestaurant.cuisine} • {selectedRestaurant.deliveryTime} mins</p>
+                  <h2 className="text-3xl font-bold text-gray-900">{selectedRestaurant.name}</h2>
+                  <p className="text-base text-gray-500">{selectedRestaurant.cuisine} • {selectedRestaurant.deliveryTime} mins</p>
                   <div className="text-yellow-500 font-bold">⭐ {selectedRestaurant.rating?.toFixed(1) || 0}</div>
                   <div className="text-gray-500 text-sm">{selectedRestaurant.totalReviews} reviews</div> 
                 </div>
@@ -437,15 +393,15 @@ const Customer = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {selectedRestaurant.menuItems.map((item, i) => (
-                  <div key={i} className="border rounded-lg p-4 flex flex-col justify-between">
+                  <div key={i} className="border rounded-2xl p-5 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
-                        <h3 className="font-semibold">{item.name}</h3>
+                        <h3 className="text-lg font-semibold">{item.name}</h3>
                         <div className="text-emerald-600 font-bold">{formatCurrency(item.price)}</div>
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                      <p className="text-sm text-gray-500 mt-1 leading-relaxed">{item.description}</p>
                       <div className="text-xs text-gray-400 mt-2">Category: {item.category}</div>
                       {item.isSeasonal && (
                         <div className="mt-2 flex items-center gap-2">
@@ -465,7 +421,7 @@ const Customer = () => {
                         </div>
                       )}
                     </div>
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-5 flex gap-2">
                       <button 
                         onClick={() => addToCart({ 
                           ...item, 
@@ -484,18 +440,18 @@ const Customer = () => {
             </div>
           ) : (
             filteredRestaurants.length === 0 ? (
-              <div className="bg-white rounded-lg p-6 shadow-sm">No restaurants match your search.</div>
+              <div className="bg-white rounded-2xl p-8 shadow-md text-lg text-gray-600">No restaurants match your search.</div>
               ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {filteredRestaurants.map((r) => (
-                  <article key={r.id} className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow">
+                  <article key={r.id} className="bg-white rounded-3xl p-5 shadow-md hover:shadow-xl transition-shadow">
                     <div className="flex items-start gap-3">
-                      <div className="text-4xl">{r.image}</div>
+                      <div className="text-5xl">{r.image}</div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start gap-2">
                           <div>
-                            <h3 className="text-lg font-semibold">{r.name}</h3>
-                            <p className="text-sm text-gray-500 mt-1">{r.description}</p>
+                            <h3 className="text-xl font-semibold">{r.name}</h3>
+                            <p className="text-sm text-gray-500 mt-1 leading-relaxed">{r.description}</p>
                           </div>
                           <div className="text-right">
                             <div className="text-yellow-500 font-bold">⭐ {r.rating?.toFixed(1) || 0}</div>
@@ -554,13 +510,13 @@ const Customer = () => {
 
       {/* Cart Drawer */}
       {isCartOpen && (
-        <aside className={`fixed top-20 right-6 z-60 w-80 bg-white rounded-xl shadow-xl transition-transform overflow-hidden`}>
+        <aside className={`fixed top-20 right-6 z-60 w-80 bg-white rounded-3xl shadow-2xl transition-transform overflow-hidden`}>
         <div className="p-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Your Cart</h3>
+            <h3 className="text-lg font-semibold">Your Cart</h3>
             <div className="flex items-center gap-2">
               <div className="text-sm text-gray-500">{cart.reduce((s, i) => s + (i.quantity || 1), 0)} items</div>
-              <button onClick={() => setIsCartOpen(false)} className="text-gray-500 hover:text-gray-800">✕</button>
+              <button onClick={closeCart} className="text-gray-500 hover:text-gray-800">✕</button>
             </div>
           </div>
 
@@ -571,15 +527,15 @@ const Customer = () => {
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="font-medium">{it.name}</div>
-                      <div className="text-xs text-gray-400">{it.restaurant}</div>
+                      <div className="text-base font-medium">{it.name}</div>
+                      <div className="text-sm text-gray-400">{it.restaurant}</div>
                     </div>
                     <div className="text-sm font-semibold">{formatCurrency(it.price * (it.quantity || 1))}</div>
                   </div>
-                    <div className="mt-2 flex items-center gap-2">
-                    <button onClick={() => decreaseQuantity(idx)} className="px-2 py-1 bg-gray-100 rounded">-</button>
-                    <div className="text-sm">{it.quantity}</div>
-                    <button onClick={() => increaseQuantity(idx)} className="px-2 py-1 bg-gray-100 rounded">+</button>
+                    <div className="mt-2 flex items-center gap-3">
+                    <button onClick={() => decreaseQuantity(idx)} className="px-2.5 py-1.5 bg-gray-100 rounded-full">-</button>
+                    <div className="text-base">{it.quantity}</div>
+                    <button onClick={() => increaseQuantity(idx)} className="px-2.5 py-1.5 bg-gray-100 rounded-full">+</button>
                   </div>
                 </div>
               </li>
@@ -588,10 +544,10 @@ const Customer = () => {
 
           <div className="mt-4 border-t pt-4">
             <div className="flex justify-between items-center mb-3">
-              <div className="text-sm text-gray-600">Subtotal</div>
-              <div className="font-bold">{formatCurrency(getTotal())}</div>
+              <div className="text-base text-gray-600">Subtotal</div>
+              <div className="text-lg font-bold">{formatCurrency(getCartTotal())}</div>
             </div>
-            <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full bg-emerald-600 text-white py-2 rounded font-semibold disabled:opacity-60">Checkout</button>
+            <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold disabled:opacity-60">Checkout</button>
           </div>
           </div>
         </aside>

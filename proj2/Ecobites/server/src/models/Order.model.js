@@ -64,8 +64,8 @@ const orderSchema = new mongoose.Schema({
   },
   packagingPreference: {
     type: String,
-    enum: ['reusable', 'compostable', 'minimal'],
-    default: 'minimal'
+    enum: ['reusable', 'compostable', 'minimal', 'standard'],
+    default: 'standard'
   },
   ecoRewardPoints: {
     type: Number,

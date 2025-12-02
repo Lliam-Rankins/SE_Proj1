@@ -19,6 +19,7 @@ import RestaurantReviews from './restaurants/RestaurantReviews';
 import MenuItems from './restaurants/MenuItems';
 import CustomerOrders from './restaurants/CustomerOrders';
 import About from './pages/About';
+import Impact from './pages/Impact';
 import { RestaurantProvider } from './context/RestaurantContext';
 import { CartProvider } from './context/CartContext';
 import {ProtectedRoute} from './routes/ProtectedRoute';
@@ -53,6 +54,7 @@ function App() {
           <Route path="/customer/cancelled-orders" element={<CancelledOrders />} />
           <Route path="/customer/my-bids" element={<MyBids />} />
           <Route path="/customer/restaurant-reviews" element={<RestaurantReviews />} />
+          <Route path="/customer/impact" element={<Impact />} />
         </Route>
 
         {/* Restaurant Routes */}

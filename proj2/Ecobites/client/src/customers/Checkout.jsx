@@ -6,19 +6,38 @@ import { profileService } from '../api/services/profile.service';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { PACKAGING_OPTIONS, PACKAGING_LABELS, ECO_REWARDS } from '../utils/constants';
 import  { toast } from 'react-toastify';
+import { useCart } from '../context/useCart';
+
+const getStoredPackagingPreference = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem('ecobites_packaging_pref');
+  } catch (error) {
+    console.warn('Unable to read stored packaging preference', error);
+    return null;
+  }
+};
+
+const derivePackagingPreference = (user) => {
+  const stored = getStoredPackagingPreference();
+  if (stored && Object.values(PACKAGING_OPTIONS).includes(stored)) {
+    return stored;
+  }
+  return user?.preferences?.packaging || PACKAGING_OPTIONS.STANDARD;
+};
 
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, refreshUser } = useAuthContext();
-  const cart = location.state?.cart || [];
+  const { cart, clearCart } = useCart();
   const rewards = user?.rewardHistory ?? [];
   const availableRewards = rewards.filter(r => r.amount === 5 && !r.used);
   const [useReward, setUseReward] = useState(false);
   const [selectedRewardId, setSelectedRewardId] = useState(null);
   const REWARD_AMOUNT = 5;
 
-  console.log("rewards:", user.rewardHistory)
+  console.log("rewards:", user?.rewardHistory);
 
   // Try to refresh user from backend on mount to get latest data including address
   React.useEffect(() => {
@@ -62,7 +81,44 @@ const Checkout = () => {
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [packagingPreference, setPackagingPreference] = useState(PACKAGING_OPTIONS.MINIMAL);
+  const [packagingPreference, setPackagingPreference] = useState(() => derivePackagingPreference(user));
+
+  React.useEffect(() => {
+    const nextPreference = derivePackagingPreference(user);
+    setPackagingPreference(nextPreference);
+
+    if (user?.preferences?.packaging) {
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('ecobites_packaging_pref', user.preferences.packaging);
+        }
+      } catch (error) {
+        console.warn('Unable to sync stored packaging preference from profile', error);
+      }
+    }
+  }, [user?.preferences?.packaging]);
+  const handlePackagingPreferenceChange = async (value) => {
+    setPackagingPreference(value);
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('ecobites_packaging_pref', value);
+      }
+    } catch (error) {
+      console.warn('Unable to persist packaging preference locally', error);
+    }
+
+    if (!isAuthenticated) return;
+
+    try {
+      await profileService.updatePreferences({ packaging: value });
+      if (refreshUser) {
+        await refreshUser();
+      }
+    } catch (error) {
+      console.warn('Unable to save packaging preference to profile', error);
+    }
+  };
+
 
   // Redirect to login when user is not authenticated. Do this in an effect
   // so hooks remain in the same order across renders.
@@ -86,7 +142,8 @@ const Checkout = () => {
   const packagingChoices = [
     { value: PACKAGING_OPTIONS.REUSABLE, label: PACKAGING_LABELS[PACKAGING_OPTIONS.REUSABLE], reward: ECO_REWARDS[PACKAGING_OPTIONS.REUSABLE], desc: 'Returnable container, highest reward' },
     { value: PACKAGING_OPTIONS.COMPOSTABLE, label: PACKAGING_LABELS[PACKAGING_OPTIONS.COMPOSTABLE], reward: ECO_REWARDS[PACKAGING_OPTIONS.COMPOSTABLE], desc: 'Compost-friendly materials' },
-    { value: PACKAGING_OPTIONS.MINIMAL, label: PACKAGING_LABELS[PACKAGING_OPTIONS.MINIMAL], reward: ECO_REWARDS[PACKAGING_OPTIONS.MINIMAL], desc: 'Reduced packaging footprint' }
+    { value: PACKAGING_OPTIONS.MINIMAL, label: PACKAGING_LABELS[PACKAGING_OPTIONS.MINIMAL], reward: ECO_REWARDS[PACKAGING_OPTIONS.MINIMAL], desc: 'Reduced packaging footprint' },
+    { value: PACKAGING_OPTIONS.STANDARD, label: PACKAGING_LABELS[PACKAGING_OPTIONS.STANDARD], reward: ECO_REWARDS[PACKAGING_OPTIONS.STANDARD], desc: 'Use default restaurant packaging (no eco bonus).' }
   ];
 
   const formatCurrency = (num) => {
@@ -187,9 +244,21 @@ const Checkout = () => {
       const response = await orderService.create(orderData);
       
       if (response) {
-        // points to award
-       // const pointsFromPackaging = ECO_REWARDS[packagingPreference] || 0;
-       // await profileService.updateRewardPoints(customerId, pointsFromPackaging);
+        const pointsFromPackaging = ECO_REWARDS[packagingPreference] || 0;
+        try {
+          await profileService.updateRewardPoints(customerId, pointsFromPackaging);
+        } catch (error) {
+          console.error('Failed to update reward points:', error);
+        }
+
+        try {
+          await profileService.updatePreferences({ packaging: packagingPreference });
+          if (refreshUser) {
+            await refreshUser();
+          }
+        } catch (error) {
+          console.error('Failed to save packaging preference after checkout:', error);
+        }
         
         if(selectedRewardId) {
           try {
@@ -199,9 +268,7 @@ const Checkout = () => {
           }
         }
         
-        if (refreshUser) await refreshUser();
-
-        // Clear cart and redirect to order status page
+        clearCart();
         navigate('/customer/orders');
         toast.success("Order placed!")
       } else {
@@ -230,27 +297,27 @@ const Checkout = () => {
   return (
   <div className="min-h-screen bg-linear-to-br from-emerald-50 to-green-50 p-6 pt-24">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="text-center mb-10">
           <button
             onClick={() => navigate('/customer')}
-            className="mb-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+            className="mb-4 px-5 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors inline-flex items-center gap-2 text-base font-medium"
           >
             ← Back to Restaurants
           </button>
-          <h1 className="text-4xl font-bold bg-linear-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent mb-2">Checkout</h1>
-          <p className="text-gray-600">Complete your order with ease</p>
+          <h1 className="text-5xl font-bold bg-linear-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent mb-3">Checkout</h1>
+          <p className="text-lg text-gray-600">Complete your order with ease</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           {/* Order Summary */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-emerald-100">
+          <div className="bg-white rounded-3xl p-7 shadow-lg border border-emerald-100">
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
                 <span className="text-emerald-600 text-lg">🛒</span>
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800">Order Summary</h2>
+              <h2 className="text-3xl font-semibold text-gray-800">Order Summary</h2>
             </div>
 
             {/* Cart Items */}
@@ -258,10 +325,10 @@ const Checkout = () => {
               {cart.map((item, idx) => (
                 <li key={idx} className="py-3 flex justify-between items-center">
                 <div>
-                <div className="font-medium text-gray-800">{item.name}</div>
+                <div className="text-base font-medium text-gray-800">{item.name}</div>
                 <div className="text-sm text-gray-500">{item.restaurant} × {item.quantity}</div>
                 </div>
-                <div className="font-semibold text-emerald-600">{formatCurrency(item.price * item.quantity)}</div>
+                <div className="text-lg font-semibold text-emerald-600">{formatCurrency(item.price * item.quantity)}</div>
                 </li>
               ))}
             </ul>
@@ -294,18 +361,18 @@ const Checkout = () => {
 
             {/* Total */}
             <div className="mt-4 border-t border-emerald-200 pt-4 flex justify-between items-center">
-              <div className="text-lg font-semibold text-gray-800">Total</div>
-              <div className="text-xl font-bold text-emerald-600">{formatCurrency(getTotal())}</div>
+              <div className="text-xl font-semibold text-gray-800">Total</div>
+              <div className="text-2xl font-bold text-emerald-600">{formatCurrency(getTotal())}</div>
             </div>
           </div>
 
           {/* Delivery Address */}
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-emerald-100">
+          <div className="bg-white rounded-3xl p-7 shadow-lg border border-emerald-100">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
                 <span className="text-emerald-600 text-sm font-bold">📍</span>
               </div>
-              <h2 className="text-xl font-semibold text-gray-800">Delivery Address</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">Delivery Address</h2>
             </div>
             {user?.address && (user.address.street || user.address.city || user.address.zipCode) && (
               <div className="mb-2 flex items-center gap-2">
@@ -322,7 +389,7 @@ const Checkout = () => {
                   id="useSavedAddress"
                   className="mr-2"
                 />
-                <label htmlFor="useSavedAddress" className="text-sm text-gray-700 cursor-pointer">
+                <label htmlFor="useSavedAddress" className="text-base text-gray-700 cursor-pointer">
                   Use saved address
                 </label>
               </div>
@@ -334,7 +401,7 @@ const Checkout = () => {
                 placeholder="Full Name"
                 value={deliveryAddress.name}
                 onChange={handleAddressChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -343,7 +410,7 @@ const Checkout = () => {
                 placeholder="Street Address"
                 value={deliveryAddress.address}
                 onChange={handleAddressChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 required
               />
               <div className="flex gap-3">
@@ -353,7 +420,7 @@ const Checkout = () => {
                   placeholder="City"
                   value={deliveryAddress.city}
                   onChange={handleAddressChange}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  className="flex-1 px-5 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 />
                 <input
                   type="text"
@@ -361,7 +428,7 @@ const Checkout = () => {
                   placeholder="ZIP Code"
                   value={deliveryAddress.zip}
                   onChange={handleAddressChange}
-                  className="w-32 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  className="w-32 px-4 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 />
               </div>
               <input
@@ -370,21 +437,21 @@ const Checkout = () => {
                 placeholder="Phone Number"
                 value={deliveryAddress.phone}
                 onChange={handleAddressChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               />
             </form>
           </div>
 
           {/* Payment Method Selection */}
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-emerald-100 lg:col-span-2">
+          <div className="bg-white rounded-3xl p-7 shadow-lg border border-emerald-100 lg:col-span-2">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
                 <span className="text-emerald-600 text-sm font-bold">💳</span>
               </div>
-              <h2 className="text-xl font-semibold text-gray-800">Payment Method</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">Payment Method</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+              <label className={`flex items-center gap-4 p-5 border-2 rounded-2xl cursor-pointer transition-all ${
                 paymentMethod === 'card'
                   ? 'border-emerald-500 bg-emerald-50 shadow-md'
                   : 'border-gray-200 hover:border-emerald-300'
@@ -399,10 +466,10 @@ const Checkout = () => {
                 />
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">💳</span>
-                  <span className="font-medium text-gray-800">Credit/Debit Card</span>
+                  <span className="text-lg font-medium text-gray-800">Credit/Debit Card</span>
                 </div>
               </label>
-              <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+              <label className={`flex items-center gap-4 p-5 border-2 rounded-2xl cursor-pointer transition-all ${
                 paymentMethod === 'cod'
                   ? 'border-emerald-500 bg-emerald-50 shadow-md'
                   : 'border-gray-200 hover:border-emerald-300'
@@ -417,25 +484,25 @@ const Checkout = () => {
                 />
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">💵</span>
-                  <span className="font-medium text-gray-800">Cash on Delivery</span>
+                  <span className="text-lg font-medium text-gray-800">Cash on Delivery</span>
                 </div>
               </label>
             </div>
 
             {paymentMethod === 'card' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                   <span className="text-emerald-600">🔒</span>
                   Card Details
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <input
                     type="text"
                     name="cardNumber"
                     placeholder="Card Number"
                     value={payment.cardNumber}
                     onChange={handlePaymentChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     required
                   />
                   <input
@@ -444,7 +511,7 @@ const Checkout = () => {
                     placeholder="Name on Card"
                     value={payment.name}
                     onChange={handlePaymentChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     required
                   />
                   <input
@@ -453,7 +520,7 @@ const Checkout = () => {
                     placeholder="MM/YY"
                     value={payment.expiry}
                     onChange={handlePaymentChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     required
                   />
                   <input
@@ -462,7 +529,7 @@ const Checkout = () => {
                     placeholder="CVV"
                     value={payment.cvv}
                     onChange={handlePaymentChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     required
                   />
                 </div>
@@ -484,16 +551,16 @@ const Checkout = () => {
             )}
 
             {/* Eco Packaging Preference */}
-            <div className="mt-8">
+            <div className="mt-10">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <span className="text-emerald-600 text-sm font-bold">🌿</span>
+                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <span className="text-emerald-600 text-base font-bold">🌿</span>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-800">Packaging Preference</h2>
+                <h2 className="text-2xl font-semibold text-gray-800">Packaging Preference</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {packagingChoices.map(choice => (
-                  <label key={choice.value} className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  <label key={choice.value} className={`flex items-start gap-4 p-5 border-2 rounded-2xl cursor-pointer transition-all ${
                     packagingPreference === choice.value ? 'border-emerald-500 bg-emerald-50 shadow-md' : 'border-gray-200 hover:border-emerald-300'
                   }`}>
                     <input
@@ -501,13 +568,13 @@ const Checkout = () => {
                       name="packagingPreference"
                       value={choice.value}
                       checked={packagingPreference === choice.value}
-                      onChange={(e) => setPackagingPreference(e.target.value)}
+                      onChange={(e) => handlePackagingPreferenceChange(e.target.value)}
                       className="mt-1 text-emerald-600 focus:ring-emerald-500"
                     />
                     <div>
-                      <div className="font-medium text-gray-800">{choice.label}</div>
+                      <div className="text-lg font-medium text-gray-800">{choice.label}</div>
                       <div className="text-sm text-emerald-700">Earn +{choice.reward} eco points</div>
-                      <div className="text-xs text-gray-500 mt-1">{choice.desc}</div>
+                      <div className="text-sm text-gray-500 mt-1 leading-relaxed">{choice.desc}</div>
                     </div>
                   </label>
                 ))}
@@ -516,11 +583,11 @@ const Checkout = () => {
           </div>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-10 text-center">
           <button
             onClick={handleConfirmOrder}
             disabled={isProcessing}
-            className="px-10 py-4 bg-linear-to-r from-emerald-600 to-emerald-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl disabled:opacity-60 hover:from-emerald-700 hover:to-emerald-600 transition-all transform hover:scale-105"
+            className="px-12 py-4 bg-linear-to-r from-emerald-600 to-emerald-500 text-white rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl disabled:opacity-60 hover:from-emerald-700 hover:to-emerald-600 transition-all transform hover:scale-105"
           >
             {isProcessing ? (
               <div className="flex items-center gap-2">

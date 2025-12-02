@@ -68,6 +68,13 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  preferences: {
+    packaging: {
+      type: String,
+      enum: ['reusable', 'compostable', 'minimal', 'standard'],
+      default: 'standard'
+    }
+  },
   // Eco rewards accumulated by the user (customers)
   rewardPoints: {
     type: Number,

@@ -37,12 +37,14 @@ export const PACKAGING_OPTIONS = {
   REUSABLE: 'reusable',
   COMPOSTABLE: 'compostable',
   MINIMAL: 'minimal',
+  STANDARD: 'standard',
 };
 
 export const PACKAGING_LABELS = {
   [PACKAGING_OPTIONS.REUSABLE]: 'Reusable Container',
   [PACKAGING_OPTIONS.COMPOSTABLE]: 'Compostable',
   [PACKAGING_OPTIONS.MINIMAL]: 'Minimal Packaging',
+  [PACKAGING_OPTIONS.STANDARD]: 'Standard Packaging',
 };
 
 // Eco Reward Points per packaging type
@@ -50,6 +52,7 @@ export const ECO_REWARDS = {
   [PACKAGING_OPTIONS.REUSABLE]: 30,
   [PACKAGING_OPTIONS.COMPOSTABLE]: 20,
   [PACKAGING_OPTIONS.MINIMAL]: 10,
+  [PACKAGING_OPTIONS.STANDARD]: 0,
 };
 
 // Driver Vehicle Types

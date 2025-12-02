@@ -26,6 +26,9 @@ export default function Login() {
 
   const { login, register} = useAuthContext();
 
+  const inputFieldClass = "w-full px-5 py-4 text-base border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/80 group-hover:border-emerald-300";
+  const selectFieldClass = `${inputFieldClass} appearance-none cursor-pointer`;
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -125,27 +128,27 @@ export default function Login() {
         <div className="absolute inset-0 bg-[radial-gradient(50%_50%_at_90%_90%,hsl(142.1_76.2%_36.3%/0.15),transparent_70%)]" />
       </div>
 
-      <div className="relative bg-white/90 backdrop-blur-sm shadow-xl rounded-2xl p-8 w-full max-w-md mx-4">
-        <div className="absolute -z-10 inset-0 bg-linear-to-b from-emerald-50/50 to-white/50 rounded-2xl" />
+      <div className="relative bg-white/95 backdrop-blur-sm shadow-2xl rounded-3xl p-10 w-full max-w-2xl mx-4">
+        <div className="absolute -z-10 inset-0 bg-linear-to-b from-emerald-50/50 to-white/50 rounded-3xl" />
         
         {/* Brand element matching Hero section */}
-        <div className="text-center mb-6">
-          <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+        <div className="text-center mb-8">
+          <span className="inline-flex items-center rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700 tracking-[0.2em]">
             EcoBites • Join Us
           </span>
         </div>
 
-        <h2 className="text-3xl font-extrabold text-center mb-2 text-gray-800">
+        <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-3 text-gray-900 tracking-tight">
           {isRegister ? "Join EcoBites" : "Welcome Back"}
         </h2>
-        <p className="text-center text-gray-600 text-sm mb-6">
+        <p className="text-center text-gray-600 text-lg mb-8">
           {isRegister 
             ? "Start your sustainable food journey today" 
             : "Continue your eco-friendly food experience"}
         </p>
 
         {message && (
-          <div className={`p-3 rounded-lg mb-4 text-sm ${
+          <div className={`p-4 rounded-xl mb-6 text-base ${
             message.includes("successful") 
               ? "bg-emerald-50 text-emerald-700" 
               : "bg-red-50 text-red-600"
@@ -154,9 +157,7 @@ export default function Login() {
           </div>
         )}
 
-     
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-label={isRegister ? "Registration Form" : "Login Form"}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5" aria-label={isRegister ? "Registration Form" : "Login Form"}>
           {isRegister && (
             <>
               <div className="relative group">
@@ -166,7 +167,7 @@ export default function Login() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                  className={inputFieldClass}
                 />
               </div>
 
@@ -175,7 +176,7 @@ export default function Login() {
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300 appearance-none cursor-pointer"
+                  className={selectFieldClass}
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                     backgroundPosition: 'right 0.5rem center',
@@ -199,7 +200,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+              className={inputFieldClass}
             />
           </div>
 
@@ -210,7 +211,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+              className={inputFieldClass}
             />
           </div>
           
@@ -223,7 +224,7 @@ export default function Login() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   required
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                  className={inputFieldClass}
                 />
               </div>
 
@@ -237,7 +238,7 @@ export default function Login() {
                       value={restaurantName}
                       onChange={(e) => setRestaurantName(e.target.value)}
                       required
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                      className={inputFieldClass}
                     />
                   </div>
                   <div className="relative group">
@@ -247,7 +248,7 @@ export default function Login() {
                       value={cuisine}
                       onChange={(e) => setCuisine(e.target.value)}
                       required
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                      className={inputFieldClass}
                     />
                     <p className="text-xs text-gray-500 mt-1 ml-1">Separate multiple cuisines with commas</p>
                   </div>
@@ -262,7 +263,7 @@ export default function Login() {
                       value={vehicleType}
                       onChange={(e) => setVehicleType(e.target.value)}
                       required
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300 appearance-none cursor-pointer"
+                      className={selectFieldClass}
                       style={{
                         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                         backgroundPosition: 'right 0.5rem center',
@@ -284,7 +285,7 @@ export default function Login() {
                       value={licensePlate}
                       onChange={(e) => setLicensePlate(e.target.value)}
                       required
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                      className={inputFieldClass}
                     />
                   </div>
                 </>
@@ -303,7 +304,7 @@ export default function Login() {
                       placeholder="Street address"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                      className={inputFieldClass}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -313,7 +314,7 @@ export default function Login() {
                         placeholder="City"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                        className={inputFieldClass}
                       />
                     </div>
                     <div className="relative group">
@@ -322,7 +323,7 @@ export default function Login() {
                         placeholder="ZIP code"
                         value={zipCode}
                         onChange={(e) => setZipCode(e.target.value)}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/70 group-hover:border-emerald-300"
+                        className={inputFieldClass}
                       />
                     </div>
                   </div>
@@ -334,7 +335,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="relative overflow-hidden px-6 py-3.5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-all duration-200 disabled:opacity-60 disabled:hover:bg-emerald-600 group"
+            className="relative overflow-hidden px-8 py-4 rounded-2xl bg-emerald-600 text-white text-lg font-semibold hover:bg-emerald-700 transition-all duration-200 disabled:opacity-60 disabled:hover:bg-emerald-600 group"
           >
             <span className={`inline-block transition-all duration-200 ${loading ? "opacity-0" : "opacity-100"}`}>
               {isRegister ? "Create Account" : "Sign In"}
@@ -356,7 +357,7 @@ export default function Login() {
           </div>
           <div className="relative">
             <button
-              className="px-4 py-2 text-sm text-gray-600 bg-white hover:text-emerald-600 transition-colors rounded-full"
+              className="px-4 py-2 text-base text-gray-600 bg-white hover:text-emerald-600 transition-colors rounded-full"
               onClick={() => {
                 setIsRegister(!isRegister);
                 setMessage("");
