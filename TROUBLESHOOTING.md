@@ -11,9 +11,12 @@ This guide covers common issues you might encounter while setting up and running
 3. [Database Seeding](#database-seeding)
 4. [Port Conflicts](#port-conflicts)
 5. [Authentication Issues](#authentication-issues)
-6. [Test Failures](#test-failures)
-7. [Package Installation Issues](#package-installation-issues)
-8. [Build and Development Server Issues](#build-and-development-server-issues)
+6. [Review System Issues](#review-system-issues)
+7. [Bidding System Issues](#bidding-system-issues)
+8. [Geocoding Issues](#geocoding-issues)
+9. [Test Failures](#test-failures)
+10. [Package Installation Issues](#package-installation-issues)
+11. [Build and Development Server Issues](#build-and-development-server-issues)
 
 ---
 
@@ -73,10 +76,7 @@ MongooseServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017
 2. **Get Connection String**
    - Click "Connect" on your cluster
    - Choose "Connect your application"
-   - Copy the connection string (looks like):
-     ```
-     mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
-     ```
+   - Copy the connection string
 
 3. **Whitelist Your IP Address**
    - In Atlas, go to "Network Access"
@@ -92,7 +92,6 @@ MongooseServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017
    ```
    MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/ecobites?retryWrites=true&w=majority
    ```
-   Replace `<username>` and `<password>` with your database user credentials.
 
 ---
 
@@ -124,7 +123,7 @@ TypeError: Cannot read property 'MONGODB_URI' of undefined
    # Database
    MONGODB_URI=mongodb://localhost:27017/ecobites
    # Or for MongoDB Atlas:
-   # MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/ecobites?retryWrites=true&w=majority
+   # MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/ecobites
 
    # Server
    PORT=3000
@@ -132,6 +131,9 @@ TypeError: Cannot read property 'MONGODB_URI' of undefined
 
    # Authentication
    JWT_SECRET=your-super-secure-random-jwt-secret-minimum-32-characters-long
+
+   # Geocoding API (if using external service)
+   GEOCODING_API_KEY=your-geocoding-api-key-here
    ```
 
 3. **Generate Secure JWT Secret**
@@ -140,18 +142,14 @@ TypeError: Cannot read property 'MONGODB_URI' of undefined
    ```bash
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ```
-   
-   Copy the output and use it as your `JWT_SECRET`.
 
 4. **Verify Environment Variables Load**
-   
-   Test that your server can read the variables:
    ```bash
    cd Ecobites/server
    node -e "require('dotenv').config(); console.log(process.env.MONGODB_URI)"
    ```
 
-**Important:** Never commit your `.env` file to version control. It should be in `.gitignore`.
+**Important:** Never commit your `.env` file to version control.
 
 ---
 
@@ -159,13 +157,10 @@ TypeError: Cannot read property 'MONGODB_URI' of undefined
 
 ### Issue: Database is Empty / No Test Data
 
-**Problem:** After setting up MongoDB, you need sample data to test the application.
-
 **Solution: Seed the Database**
 
 1. **Ensure MongoDB is Running**
    ```bash
-   # Check if MongoDB is accessible
    mongosh
    # Type 'exit' to leave mongo shell
    ```
@@ -179,19 +174,16 @@ TypeError: Cannot read property 'MONGODB_URI' of undefined
    ```bash
    npm run seed
    ```
-   
-   Or directly:
-   ```bash
-   node src/seed.js
-   ```
 
 4. **Expected Output**
    ```
    🌱 Database seeded successfully!
    ✅ Created 5 users
    ✅ Created 3 restaurants
-   ✅ Created 15 menu items
+   ✅ Created 15 menu items (including seasonal items)
    ✅ Created 8 sample orders
+   ✅ Created 10 reviews
+   ✅ Created 5 bids
    ```
 
 5. **Verify Data Was Created**
@@ -201,24 +193,21 @@ TypeError: Cannot read property 'MONGODB_URI' of undefined
    db.users.countDocuments()
    db.menuitems.countDocuments()
    db.orders.countDocuments()
+   db.reviews.countDocuments()
+   db.bids.countDocuments()
    ```
 
 6. **Re-seed Database (Clear and Recreate)**
-   
-   If you need to reset the database:
    ```bash
-   # In mongosh:
+   mongosh ecobites
    use ecobites
    db.dropDatabase()
    exit
    
-   # Then run seed again:
    npm run seed
    ```
 
 ### Default Seeded Users
-
-After seeding, you can log in with these test accounts:
 
 | Role       | Email               | Password  |
 |------------|---------------------|-----------|
@@ -238,10 +227,6 @@ After seeding, you can log in with these test accounts:
 ```
 Error: listen EADDRINUSE: address already in use :::3000
 ```
-or
-```
-Port 5173 is already in use
-```
 
 **Solution:**
 
@@ -249,24 +234,20 @@ Port 5173 is already in use
 
 **macOS/Linux:**
 ```bash
-# Find process using port 3000
-lsof -ti:3000
-# Kill the process
-kill -9 $(lsof -ti:3000)
+# Backend (port 3000)
+lsof -ti:3000 | xargs kill -9
 
-# For frontend (port 5173)
-lsof -ti:5173
-kill -9 $(lsof -ti:5173)
+# Frontend (port 5173)
+lsof -ti:5173 | xargs kill -9
 ```
 
 **Windows (Command Prompt):**
 ```cmd
-# Find process using port 3000
+# Backend
 netstat -ano | findstr :3000
-# Kill process (replace PID with actual process ID)
 taskkill /PID <PID> /F
 
-# For frontend (port 5173)
+# Frontend
 netstat -ano | findstr :5173
 taskkill /PID <PID> /F
 ```
@@ -284,7 +265,7 @@ Edit `Ecobites/client/vite.config.js`:
 ```javascript
 export default defineConfig({
   server: {
-    port: 5174, // Change from 5173
+    port: 5174,
   }
 })
 ```
@@ -307,37 +288,231 @@ jwt malformed
 **Solutions:**
 
 #### 1. Check JWT_SECRET
-
-Ensure `JWT_SECRET` is set in your server `.env` file and is at least 32 characters long.
+Ensure `JWT_SECRET` is set in `.env` and is at least 32 characters long.
 
 #### 2. Clear Browser Cookies
-
-The app uses httpOnly cookies for authentication. Clear your browser cookies:
+The app uses httpOnly cookies for authentication:
 - **Chrome/Edge:** Settings → Privacy → Clear browsing data → Cookies
 - **Firefox:** Settings → Privacy → Clear Data → Cookies
 - Or use incognito/private mode
 
 #### 3. Check Server is Running
-
-Ensure the backend server is running on the correct port:
 ```bash
 cd Ecobites/server
 npm start
 ```
 
 #### 4. CORS Issues
-
-If you see CORS errors in the browser console, check:
-- Frontend is making requests to `http://localhost:3000` (or your server port)
-- Check `Ecobites/client/src/api/axios.config.js` has correct baseURL
+Check `Ecobites/client/src/api/axios.config.js` has correct baseURL.
 
 #### 5. Re-seed Database
-
-User passwords may be corrupted. Re-run the seed script:
+User passwords may be corrupted:
 ```bash
 cd Ecobites/server
 npm run seed
 ```
+
+---
+
+## Review System Issues
+
+### Issue: Cannot Create Review
+
+**Error Message:**
+```
+409 Conflict: Review already exists
+```
+
+**Cause:** Users can only submit one review per restaurant.
+
+**Solution:**
+- Update existing review instead of creating new one
+- Delete old review first, then create new one
+
+### Issue: Review Not Verified
+
+**Problem:** Review shows `verified: false` even though linked to order.
+
+**Solution:**
+1. Check order status is "DELIVERED" or "delivered"
+2. Verify `orderId` in review matches actual order ID
+3. Confirm `customerId` matches order customer
+4. Re-save review to trigger verification middleware
+
+### Issue: Restaurant Rating Not Updating
+
+**Problem:** After adding/updating/deleting review, restaurant's `averageRating` doesn't change.
+
+**Solution:**
+1. Check MongoDB connection is stable
+2. Manually trigger rating update:
+   ```javascript
+   const Review = require('./models/Review.model');
+   await Review.updateRestaurantRating('restaurant-id');
+   ```
+3. Verify review has valid rating (1-5)
+4. Check MongoDB aggregation pipeline permissions
+
+### Issue: Cannot Mark Review as Helpful
+
+**Error Message:**
+```
+500 Internal Server Error
+```
+
+**Solution:**
+1. Ensure user is authenticated
+2. Check review ID is valid
+3. Verify user hasn't already marked review (system should toggle, not error)
+4. Check `helpfulBy` array isn't corrupted
+
+---
+
+## Bidding System Issues
+
+### Issue: Cannot Place Bid on Cancelled Order
+
+**Error Message:**
+```
+400 Bad Request: Order is not available for bidding
+```
+
+**Possible Causes:**
+1. Order status is not "CANCELLED"
+2. Order already has accepted bid
+3. Order doesn't exist
+
+**Solution:**
+1. Verify order status:
+   ```bash
+   mongosh ecobites
+   db.orders.findOne({_id: ObjectId("order-id")})
+   ```
+2. Ensure order status is exactly "CANCELLED" (case-sensitive)
+3. Check no other bid has been accepted for this order
+
+### Issue: Bid Expiration Not Working
+
+**Problem:** Bids not automatically expiring after 24 hours.
+
+**Solution:**
+1. Implement scheduled job or cron to check `expiresAt` field
+2. Manually expire old bids:
+   ```javascript
+   await Bid.updateMany(
+     { expiresAt: { $lt: new Date() }, status: 'PENDING' },
+     { status: 'EXPIRED' }
+   );
+   ```
+3. Add TTL index on `expiresAt` field in MongoDB
+
+### Issue: Cannot Accept Bid
+
+**Error Message:**
+```
+403 Forbidden: Not authorized to accept this bid
+```
+
+**Solution:**
+1. Ensure authenticated user is the original order customer
+2. Verify order hasn't already been claimed
+3. Check bid status is "PENDING"
+4. Confirm bid hasn't expired
+
+### Issue: Order Not Reassigned After Accepting Bid
+
+**Problem:** After accepting bid, order still shows original customer.
+
+**Solution:**
+1. Check bid acceptance controller logic updates order correctly
+2. Verify these fields are updated:
+   - `customerId` → bidder's ID
+   - `claimedBy` → bidder's ID
+   - `claimedVia` → 'BID'
+   - `originalTotal` → saved before update
+   - `total` → updated to bid amount
+   - `status` → reset to 'PLACED'
+3. Check other pending bids are rejected
+
+### Issue: Multiple Bids Accepted for Same Order
+
+**Problem:** Database allows multiple accepted bids.
+
+**Solution:**
+1. Add transaction/atomic operation to bid acceptance
+2. Use MongoDB `findOneAndUpdate` with conditions:
+   ```javascript
+   const bid = await Bid.findOneAndUpdate(
+     { _id: bidId, status: 'PENDING' },
+     { status: 'ACCEPTED' },
+     { new: true }
+   );
+   if (!bid) throw new Error('Bid already processed');
+   ```
+3. Add unique compound index: `{ orderId: 1, status: 1 }` with condition `status === 'ACCEPTED'`
+
+---
+
+## Geocoding Issues
+
+### Issue: Address Geocoding Fails
+
+**Error Message:**
+```
+500 Internal Server Error: Failed to geocode address
+```
+
+**Possible Causes:**
+1. Missing or invalid geocoding API key
+2. API rate limit exceeded
+3. Invalid address format
+4. Network connectivity issues
+
+**Solution:**
+
+#### 1. Check Environment Variable
+```bash
+echo $GEOCODING_API_KEY  # Should show your API key
+```
+
+#### 2. Verify API Key is Valid
+- Log in to your geocoding service provider
+- Check API key hasn't been revoked
+- Verify API key has correct permissions
+
+#### 3. Test Geocoding Manually
+```bash
+curl "https://your-geocoding-api.com/geocode?address=123+Main+St&key=YOUR_KEY"
+```
+
+#### 4. Implement Fallback
+If geocoding fails, allow manual coordinate entry:
+```javascript
+if (!coordinates) {
+  // Prompt user to enter coordinates manually
+  // or use default coordinates for city
+}
+```
+
+#### 5. Check Rate Limits
+- Monitor API usage dashboard
+- Implement caching for frequently geocoded addresses
+- Consider upgrading API plan
+
+### Issue: Coordinates Not Saving
+
+**Problem:** Geocoding succeeds but coordinates not saved to database.
+
+**Solution:**
+1. Check address schema includes `coordinates` field:
+   ```javascript
+   coordinates: {
+     lat: Number,
+     lng: Number
+   }
+   ```
+2. Verify controller saves entire address object
+3. Check for validation errors in Mongoose
 
 ---
 
@@ -348,34 +523,23 @@ npm run seed
 **Common Causes & Solutions:**
 
 #### 1. MongoDB Not Running
-
-Ensure MongoDB is running before running tests:
+Ensure MongoDB is running before tests:
 ```bash
-# macOS
-brew services start mongodb-community
-
-# Windows
-net start MongoDB
-
-# Linux
-sudo systemctl start mongod
+brew services start mongodb-community  # macOS
+net start MongoDB                      # Windows
+sudo systemctl start mongod            # Linux
 ```
 
 #### 2. Test Database Conflicts
-
-Tests create a separate test database. If tests fail intermittently:
+Clear test database:
 ```bash
-# Clear test database
 mongosh ecobites_test
 db.dropDatabase()
 exit
 ```
 
 #### 3. Port Conflicts During Tests
-
-Tests may fail if server port is in use:
 ```bash
-# Kill any running servers
 # macOS/Linux
 lsof -ti:3000 | xargs kill -9
 
@@ -385,8 +549,6 @@ taskkill /PID <PID> /F
 ```
 
 #### 4. Missing Dependencies
-
-Ensure all dependencies are installed:
 ```bash
 # Backend
 cd Ecobites/server
@@ -415,14 +577,51 @@ npm test -- --coverage
 
 **Backend:**
 ```bash
-cd Ecobites/server
-npm test -- tests/integration/auth.test.mjs
+npm test -- tests/integration/reviews.test.mjs
+npm test -- tests/integration/bids.test.mjs
 ```
 
 **Frontend:**
 ```bash
-cd Ecobites/client
-npm test -- src/tests/Login.test.jsx
+npm test -- src/tests/ReviewForm.test.jsx
+```
+
+### Issue: Review Tests Failing
+
+**Common Issues:**
+1. Restaurant rating aggregation not updating
+2. Duplicate review validation not working
+3. Helpful marking failing
+
+**Solution:**
+```bash
+# Clear test data
+mongosh ecobites_test
+db.reviews.deleteMany({})
+db.users.deleteMany({})
+exit
+
+# Run tests again
+npm test -- tests/integration/reviews.test.mjs
+```
+
+### Issue: Bid Tests Failing
+
+**Common Issues:**
+1. Bid expiration logic not working
+2. Order reassignment failing
+3. Multiple bids accepted
+
+**Solution:**
+```bash
+# Clear test data
+mongosh ecobites_test
+db.bids.deleteMany({})
+db.orders.deleteMany({})
+exit
+
+# Run with verbose logging
+npm test -- tests/integration/bids.test.mjs --verbose
 ```
 
 ---
@@ -435,18 +634,12 @@ npm test -- src/tests/Login.test.jsx
 ```
 npm ERR! code EACCES
 ```
-or
-```
-npm ERR! network timeout
-```
 
 **Solutions:**
 
 #### 1. Permission Issues (macOS/Linux)
-
-Don't use `sudo` with npm. If you have permission issues:
+Don't use `sudo` with npm:
 ```bash
-# Fix npm permissions
 mkdir ~/.npm-global
 npm config set prefix '~/.npm-global'
 echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc
@@ -454,7 +647,6 @@ source ~/.zshrc
 ```
 
 #### 2. Clear npm Cache
-
 ```bash
 npm cache clean --force
 rm -rf node_modules package-lock.json
@@ -462,25 +654,14 @@ npm install
 ```
 
 #### 3. Use npm ci for Clean Install
-
 ```bash
 npm ci
 ```
 
-#### 4. Network/Timeout Issues
-
-If behind a corporate firewall or proxy:
+#### 4. Node Version Mismatch
+Ensure Node.js 18 or higher:
 ```bash
-npm config set registry https://registry.npmjs.org/
-npm config set strict-ssl false  # Only if necessary
-```
-
-#### 5. Node Version Mismatch
-
-Ensure you're using Node.js 18 or higher:
-```bash
-node --version
-# Should show v18.x.x or higher
+node --version  # Should show v18.x.x or higher
 
 # Use nvm to switch versions
 nvm install 18
@@ -493,11 +674,6 @@ nvm use 18
 
 ### Issue: Frontend Build Fails
 
-**Error Message:**
-```
-Vite build failed
-```
-
 **Solution:**
 
 1. **Clear Build Cache**
@@ -509,15 +685,11 @@ Vite build failed
    ```
 
 2. **Check for Syntax Errors**
-   
-   Run linter to find issues:
    ```bash
    npm run lint
    ```
 
 3. **Memory Issues**
-   
-   Increase Node.js memory limit:
    ```bash
    export NODE_OPTIONS="--max-old-space-size=4096"
    npm run build
@@ -546,28 +718,36 @@ Vite build failed
 Before asking for help, verify:
 
 - [ ] MongoDB is running (`mongosh` connects successfully)
-- [ ] `.env` file exists in `Ecobites/server/` with all required variables
-- [ ] Database is seeded (`npm run seed` completed successfully)
-- [ ] All dependencies installed (`npm install` in both client and server)
-- [ ] Correct Node.js version (18+): `node --version`
-- [ ] No port conflicts (ports 3000 and 5173 are free)
+- [ ] `.env` file exists with all required variables (including `GEOCODING_API_KEY` if needed)
+- [ ] Database is seeded with reviews and bids (`npm run seed`)
+- [ ] All dependencies installed in both client and server
+- [ ] Correct Node.js version (18+)
+- [ ] No port conflicts (3000 and 5173 are free)
 - [ ] Browser cookies cleared (for auth issues)
-- [ ] Both client and server are running in separate terminals
+- [ ] Both client and server running in separate terminals
 
 ---
 
-## Still Having Issues?
+## New Feature Specific Issues
 
-If none of the above solutions work:
+### Review System Checklist
+- [ ] Review model properly indexed (restaurantId + customerId unique)
+- [ ] Rating aggregation triggers on create/update/delete
+- [ ] One review per customer per restaurant enforced
+- [ ] Helpful votes properly tracked
 
-1. **Check the logs** in both terminal windows running the client and server
-2. **Open browser console** (F12) and check for JavaScript errors
-3. **Check MongoDB logs** for database connection issues
-4. **Create an issue** on GitHub with:
-   - Error message (full stack trace)
-   - Steps to reproduce
-   - Your environment (OS, Node version, MongoDB version)
-   - Output of `npm list` in both client and server directories
+### Bidding System Checklist
+- [ ] Only cancelled orders show in marketplace
+- [ ] Bids expire after 24 hours
+- [ ] Only original customer can accept bids
+- [ ] Order properly reassigned on bid acceptance
+- [ ] Other bids rejected when one accepted
+
+### Geocoding Checklist
+- [ ] API key configured in environment
+- [ ] Address format validated before geocoding
+- [ ] Coordinates saved to database
+- [ ] Fallback strategy for geocoding failures
 
 ---
 
@@ -579,25 +759,42 @@ brew services start mongodb-community  # macOS
 net start MongoDB                      # Windows
 sudo systemctl start mongod            # Linux
 
-# Check MongoDB status
-mongosh
-
-# Seed database
+# Seed database (now includes reviews and bids)
 cd Ecobites/server && npm run seed
 
 # Run tests
-cd Ecobites/server && npm test        # Backend
-cd Ecobites/client && npm test        # Frontend
+cd Ecobites/server && npm test
+cd Ecobites/client && npm test
+
+# Run specific test suites
+npm test -- tests/integration/reviews.test.mjs
+npm test -- tests/integration/bids.test.mjs
 
 # Start servers
-cd Ecobites/server && npm start       # Backend
-cd Ecobites/client && npm run dev     # Frontend
+cd Ecobites/server && npm start
+cd Ecobites/client && npm run dev
 
-# Check for port usage
-lsof -ti:3000                         # macOS/Linux
-netstat -ano | findstr :3000          # Windows
+# Check MongoDB data
+mongosh ecobites
+db.reviews.find().pretty()
+db.bids.find().pretty()
 
-# Clear and reinstall dependencies
-rm -rf node_modules package-lock.json
-npm install
+# Clear specific collections
+db.reviews.deleteMany({})
+db.bids.deleteMany({})
 ```
+
+---
+
+## Still Having Issues?
+
+If none of the solutions work:
+
+1. **Check the logs** in both terminal windows
+2. **Open browser console** (F12) for JavaScript errors
+3. **Check MongoDB logs** for database issues
+4. **Create an issue** on GitHub with:
+   - Error message (full stack trace)
+   - Steps to reproduce
+   - Environment details (OS, Node version, MongoDB version)
+   - Output of `npm list` in both directories
