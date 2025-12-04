@@ -135,7 +135,11 @@ describe('RestaurantReviews', () => {
       pagination: { total: 3, page: 1, limit: 10, totalPages: 1 }
     });
 
-    render(<RestaurantReviews restaurantId="restaurant123" />);
+    render(<RestaurantReviews 
+      restaurantId="restaurant123" 
+      averageRating={4.0}
+      totalReviews={3}
+    />);
 
     await waitFor(() => {
       expect(screen.getByText('4.0')).toBeInTheDocument();
@@ -155,12 +159,25 @@ describe('RestaurantReviews', () => {
     const newReview = {
       _id: 'review4',
       restaurantId: 'restaurant123',
-      customerId: mockCustomerUser._id,
+      customerId: {
+        _id: mockCustomerUser._id,
+        name: 'Customer User'
+      },
       rating: 5,
-      comment: 'Excellent!'
+      comment: 'Excellent!',
+      verified: false,
+      helpfulCount: 0,
+      response: null,
+      createdAt: new Date().toISOString()
     };
     
-    reviewService.create.mockResolvedValue(newReview);
+    reviewService.create.mockResolvedValue({
+      review: newReview,
+      stats: {
+        averageRating: 5.0,
+        totalReviews: 1
+      }
+    });
 
     render(<RestaurantReviews restaurantId="restaurant123" />);
 
@@ -205,8 +222,21 @@ describe('RestaurantReviews', () => {
       pagination: { total: 1, page: 1, limit: 10, totalPages: 1 }
     });
 
-    const updatedReview = { ...customerReview, rating: 4, comment: 'Updated comment' };
-    reviewService.update.mockResolvedValue(updatedReview);
+    const updatedReview = { 
+      ...customerReview, 
+      _id: 'review1',
+      customerId: { _id: mockCustomerUser._id, name: 'John Doe' },
+      rating: 4, 
+      comment: 'Updated comment' 
+    };
+    
+    reviewService.update.mockResolvedValue({
+      review: updatedReview,
+      stats: {
+        averageRating: 4.0,
+        totalReviews: 1
+      }
+    });
 
     render(<RestaurantReviews restaurantId="restaurant123" />);
 
@@ -347,7 +377,18 @@ describe('RestaurantReviews', () => {
       pagination: { total: 3, page: 1, limit: 10, totalPages: 1 }
     });
 
-    render(<RestaurantReviews restaurantId="restaurant123" />);
+    render(<RestaurantReviews 
+      restaurantId="restaurant123"
+      averageRating={4.0}
+      totalReviews={3}
+      ratingDistribution={{
+        5: 1,
+        4: 1,
+        3: 1,
+        2: 0,
+        1: 0
+      }}
+    />);
 
     await waitFor(() => {
       expect(screen.getByText('5 Stars')).toBeInTheDocument();

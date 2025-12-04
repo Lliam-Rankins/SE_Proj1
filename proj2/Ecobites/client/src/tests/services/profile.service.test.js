@@ -155,7 +155,7 @@ describe('profileService', () => {
 
       const res = await profileService.updateRewardPoints('user1', 20);
 
-      expect(api.patch).toHaveBeenCalledWith('/users/user1/points', { points: 20 });
+      expect(api.patch).toHaveBeenCalledWith('/profile/users/user1/points', { points: 20 });
       expect(res.rewardPoints).toBe(20);
       expect(res.rewardsIssued).toBe(0);
     });
@@ -171,7 +171,7 @@ describe('profileService', () => {
 
       const res = await profileService.updateRewardPoints('user1', 100);
 
-      expect(api.patch).toHaveBeenCalledWith('/users/user1/points', { points: 100 });
+      expect(api.patch).toHaveBeenCalledWith('/profile/users/user1/points', { points: 100 });
       expect(res.rewardsIssued).toBe(1);
       expect(res.rewardPoints).toBe(0);
     });
