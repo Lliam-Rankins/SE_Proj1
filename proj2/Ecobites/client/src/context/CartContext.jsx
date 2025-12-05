@@ -1,9 +1,39 @@
-import { useContext, useState } from 'react';
+/* eslint-disable no-unused-vars */
+import { useContext, useState, useEffect } from 'react';
 import { CartContext } from './contexts';
+import { useAuthContext } from './AuthContext';
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState([]);
+  const { user } = useAuthContext();
+  const storageKey = user ? `ecoCart_${user._id}` : 'ecoCart_guest';
+
+  const readCartFromStorage = (key) => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = window.localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.warn('Unable to read cart from storage', error);
+      return [];
+    }
+  };
+
+  const [cart, setCart] = useState(() => readCartFromStorage(storageKey));
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  useEffect(() => {
+    setCart(readCartFromStorage(storageKey));
+  }, [storageKey]);
+
+  // save cart to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(cart));
+    } catch (error) {
+      console.warn('Unable to persist cart to storage', error);
+    }
+  }, [cart, storageKey]);
 
   const addToCart = (item) => {
     setCart((prev) => {
@@ -19,6 +49,18 @@ export const CartProvider = ({ children }) => {
     });
     setIsCartOpen(true);
   };
+
+  /** 
+  const addOrderToCart = (order) => {
+    order.items.forEach(item => {
+      addToCart({
+        menuItemId: item.menuItemId,
+        name: item.name,
+        quantity: item.quantity,
+        restaurant: order.restaurantName || order.restaurant || "Unknown"
+      })
+    })
+  } */
 
   const removeFromCart = (index) => {
     setCart((prev) => {
@@ -41,6 +83,30 @@ export const CartProvider = ({ children }) => {
     setIsCartOpen((prev) => !prev);
   };
 
+  const openCart = () => setIsCartOpen(true);
+  const closeCart = () => setIsCartOpen(false);
+
+  const increaseQuantity = (index) => {
+    setCart((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, quantity: (item.quantity || 1) + 1 } : item
+      )
+    );
+  };
+
+  const decreaseQuantity = (index) => {
+    setCart((prev) => {
+      const updated = [...prev];
+      if (!updated[index]) return updated;
+      if ((updated[index].quantity || 1) > 1) {
+        updated[index].quantity -= 1;
+        return updated;
+      }
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+
   const getCartTotal = () => {
     return cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   };
@@ -51,9 +117,14 @@ export const CartProvider = ({ children }) => {
         cart,
         isCartOpen,
         addToCart,
+        //addOrderToCart,
         removeFromCart,
         clearCart,
         toggleCart,
+        openCart,
+        closeCart,
+        increaseQuantity,
+        decreaseQuantity,
         getCartTotal,
       }}
     >
@@ -62,6 +133,7 @@ export const CartProvider = ({ children }) => {
   );
 };
 
+/** 
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
@@ -69,5 +141,6 @@ export const useCart = () => {
   }
   return context;
 };
+*/
 
 // Note: raw CartContext is exported from `contexts.js`.

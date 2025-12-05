@@ -38,7 +38,29 @@ const userSchema = new mongoose.Schema({
   restaurantName: String,
   restaurantImage: String,
   cuisine: [String],
-  
+  averageRating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
+  },
+  totalReviews: {
+    type: Number,
+    default: 0
+  },
+  ratingDistribution: {
+    5: { type: Number, default: 0 },
+    4: { type: Number, default: 0 },
+    3: { type: Number, default: 0 },
+    2: { type: Number, default: 0 },
+    1: { type: Number, default: 0 }
+  },
+  detailedRatings: {
+    food: Number,
+    service: Number,
+    delivery: Number,
+    value: Number
+  },
   // For drivers
   vehicleType: String,
   licensePlate: String,
@@ -46,11 +68,25 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  preferences: {
+    packaging: {
+      type: String,
+      enum: ['reusable', 'compostable', 'minimal', 'standard'],
+      default: 'standard'
+    }
+  },
   // Eco rewards accumulated by the user (customers)
   rewardPoints: {
     type: Number,
     default: 0
-  }
+  },
+  rewardHistory: [
+    {
+      amount: { type: Number, default: 5 },
+      issuedAt: { type: Date, default: Date.now },
+      used: { type: Boolean, default: false}
+    }
+  ]
 }, {
   timestamps: true
 });

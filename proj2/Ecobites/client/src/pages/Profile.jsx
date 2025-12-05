@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Customer from "../customers/Customer";
+import ImpactDashboard from "../customers/ImpactDashboard";
 import { useAuthContext } from "../context/AuthContext";
 
 // Single Profile component that renders different UI based on authenticated user's role.
@@ -149,7 +150,10 @@ export default function Profile() {
               <p className="text-sm text-gray-600">Eco Rewards Balance: <span className="font-medium text-emerald-600">{customerInfo.rewardPoints}</span> pts</p>
               <p className="text-xs text-gray-500 mt-1">Choose reusable/compostable/minimal packaging at checkout to earn more.</p>
             </div>
-            <Customer />
+            <ImpactDashboard userId={authUser?._id} />
+            <div className="mt-8">
+              <Customer />
+            </div>
           </div>
         );
       case "orders":

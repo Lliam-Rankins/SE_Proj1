@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
@@ -36,9 +37,9 @@ const orderSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: [
-      'PLACED',           // Customer placed order
+      'PLACED',
       'placed',
-      'pending',          // legacy/test-friendly lower-case pending
+      'pending',
       'RECEIVED',
       'received',
       'ACCEPTED',
@@ -53,31 +54,27 @@ const orderSchema = new mongoose.Schema({
       'picked_up',
       'OUT_FOR_DELIVERY',
       'out_for_delivery',
-  'DELIVERED',
-  'delivered',
-  'CANCELLED',
-  'cancelled',
-  'COMBINED'
+      'DELIVERED',
+      'delivered',
+      'CANCELLED',
+      'cancelled',
+      'COMBINED'
     ],
     default: 'PLACED'
   },
-  // Eco packaging preference selected by customer
   packagingPreference: {
     type: String,
-    enum: ['reusable', 'compostable', 'minimal'],
-    default: 'minimal'
+    enum: ['reusable', 'compostable', 'minimal', 'standard'],
+    default: 'standard'
   },
-  // Eco reward points granted for packaging choice
   ecoRewardPoints: {
     type: Number,
     default: 0
   },
-  // Whether reward points were credited to the user (on delivery)
   ecoRewardCredited: {
     type: Boolean,
     default: false
   },
-  // Driver green delivery incentives
   driverRewardPoints: {
     type: Number,
     default: 0
@@ -95,7 +92,6 @@ const orderSchema = new mongoose.Schema({
       lng: Number
     }
   },
-  // Grouping info for combined deliveries
   combineGroupId: {
     type: String,
     default: null
@@ -104,6 +100,24 @@ const orderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order'
   }],
+  
+  // NEW FIELDS FOR BIDDING SYSTEM
+  claimedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  claimedVia: {
+    type: String,
+    enum: ['BID', 'DIRECT'],
+    default: null
+  },
+  originalTotal: {
+    type: Number,
+    default: null
+  },
+  // END NEW FIELDS
+  
   subtotal: {
     type: Number,
     required: false,
@@ -150,6 +164,4 @@ orderSchema.pre('validate', async function(next) {
 });
 
 export const Order = mongoose.model('Order', orderSchema);
-
-// Default export for compatibility with default imports in tests
 export default Order;

@@ -75,12 +75,14 @@ export const register = async (req, res) => {
         email: user.email,
         role: user.role,
         rewardPoints: user.rewardPoints || 0,
+        rewardHistory: user.rewardHistory || [],
         vehicleType: user.vehicleType || null,
         licensePlate: user.licensePlate || null,
         restaurantName: user.restaurantName || null,
         cuisine: user.cuisine || null,
         address: user.address || null,
         phone: user.phone || null,
+        preferences: user.preferences || {},
       },
     });
   } catch (error) {
@@ -130,12 +132,14 @@ export const login = async (req, res) => {
         email: user.email,
         role: user.role,
         rewardPoints: user.rewardPoints || 0,
+        rewardHistory: user.rewardHistory || [],
         vehicleType: user.vehicleType || null,
         licensePlate: user.licensePlate || null,
         restaurantName: user.restaurantName || null,
         cuisine: user.cuisine || null,
         address: user.address || null,
         phone: user.phone || null,
+        preferences: user.preferences || {},
       },
     });
   } catch (error) {
@@ -158,12 +162,14 @@ export const me = async (req, res) => {
         email: req.user.email,
         role: req.user.role,
         rewardPoints: req.user.rewardPoints || 0,
+        rewardHistory: req.user.rewardHistory || [],
         vehicleType: req.user.vehicleType || null,
         licensePlate: req.user.licensePlate || null,
         restaurantName: req.user.restaurantName || null,
         cuisine: req.user.cuisine || null,
         address: req.user.address || null,
         phone: req.user.phone || null,
+        preferences: req.user.preferences || {},
       }
     });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { updateAddress, geocodeOnly } from '../controller/profile.controller.js';
+import { updateAddress, geocodeOnly, updateRewardPoints, markRewardUsed, updatePreferences } from '../controller/profile.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
+
 
 const router = Router();
 
@@ -9,5 +10,10 @@ router.post('/geocode', protect, geocodeOnly);
 
 // Update address and geocode (for saving to profile)
 router.post('/address', protect, updateAddress);
+router.post('/preferences', protect, updatePreferences);
+
+router.patch("/users/:userId/points", protect, updateRewardPoints);
+
+router.patch("/users/:userId/rewards/:rewardId/use", protect, markRewardUsed);
 
 export default router;

@@ -77,7 +77,7 @@ export default function CustomerOrders() {
 
   // UI
   return (
-    <div className="p-6">
+    <div className="p-6 pt-25">
       <h1 className="text-3xl font-bold mb-2">Customer Orders</h1>
       <p className="text-gray-600 mb-6">Accept or reject incoming orders and mark them ready to send to drivers.</p>
 

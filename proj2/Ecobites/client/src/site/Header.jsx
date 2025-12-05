@@ -1,15 +1,14 @@
-import {useAuthContext} from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, NavLink, Link } from "react-router-dom";
+import { useAuthContext } from "../context/AuthContext";
 
 
 export default function SiteHeader({ onMenuClick, showMenuButton }) {
   const { isAuthenticated, logout, user } = useAuthContext();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Get role from user object
   const role = user?.role;
 
-  // Determine dashboard route by role
   const getDashboardLink = () => {
     switch (role) {
       case "customer":
@@ -32,53 +31,62 @@ export default function SiteHeader({ onMenuClick, showMenuButton }) {
     }
   };
 
+  const baseNavClasses = "px-4 py-2 rounded-lg transition-all duration-200 font-medium";
+  const defaultNavClasses = "text-gray-700 hover:text-emerald-600 hover:bg-emerald-50";
+  const highlightActiveClasses = "bg-emerald-600 text-white shadow-sm";
+  const navLinkClass = ({ isActive }) =>
+    `${baseNavClasses} ${isActive ? highlightActiveClasses : defaultNavClasses}`;
+  const impactLinkClass = navLinkClass;
+  const dashboardPath = getDashboardLink();
+  const isCustomerImpact = role === 'customer' && location.pathname.startsWith('/customer/impact');
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-transform">
               <span className="text-white text-xl font-bold">🍃</span>
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
               EcoBites
             </span>
-          </a>
+          </Link>
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-2">
-            <a href="/" className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium">
+            <NavLink to="/" end className={navLinkClass}>
               Home
-            </a>
-            {!isAuthenticated && (
-              <>
-                <a 
-                  href="/restaurants" 
-                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
-                >
-                  Restaurants
-                </a>
-                <a 
-                  href="/customer" 
-                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
-                >
-                  Customers
-                </a>
-                <a 
-                  href="/driver" 
-                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
-                >
-                  Drivers
-                </a>
-              </>
-            )}
-            <a 
-              href="/about" 
-              className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
+            </NavLink>
+            <NavLink 
+              to="/about" 
+              className={navLinkClass}
             >
               About
-            </a>
+            </NavLink>
+            {!isAuthenticated && (
+              <>
+                <NavLink 
+                  to="/restaurants" 
+                  className={navLinkClass}
+                >
+                  Restaurants
+                </NavLink>
+                <NavLink 
+                  to="/customer" 
+                  className={navLinkClass}
+                >
+                  Customers
+                </NavLink>
+                <NavLink 
+                  to="/driver" 
+                  className={navLinkClass}
+                >
+                  Drivers
+                </NavLink>
+              </>
+            )}
 
             {/* Divider */}
             <div className="w-px h-6 bg-gray-300 mx-2"></div>
@@ -86,21 +94,31 @@ export default function SiteHeader({ onMenuClick, showMenuButton }) {
             {/* Conditional Buttons */}
             {!isAuthenticated ? (
               <>
-                <a
-                  href="/login"
-                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 font-medium"
+                <NavLink
+                  to="/login"
+                  className={navLinkClass}
                 >
                   Login
-                </a>
+                </NavLink>
               </>
             ) : (
               <>
-                <a
-                  href={getDashboardLink()}
-                  className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 font-semibold shadow-sm hover:shadow-md transform hover:scale-105"
+                {role === 'customer' && (
+                  <NavLink
+                    to="/customer/impact"
+                    className={impactLinkClass}
+                  >
+                    Impact
+                  </NavLink>
+                )}
+                <NavLink
+                  to={dashboardPath}
+                  className={({ isActive }) =>
+                    navLinkClass({ isActive: isActive && !isCustomerImpact })
+                  }
                 >
                   {role ? `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard` : 'Dashboard'}
-                </a>
+                </NavLink>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium"

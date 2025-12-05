@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '../context/AuthContext';
 import { menuService } from '../api/services/menu.service';
@@ -95,7 +96,7 @@ export default function MenuItems() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-25">
       <h1 className="text-3xl font-bold mb-2">Menu Items</h1>
       <p className="text-gray-600 mb-6">Create, edit, and organize your restaurant's offerings.</p>
 
