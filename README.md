@@ -94,9 +94,9 @@ At EcoBites, we are redefining food delivery with sustainability at its core, em
 
 <div align="center">
   
-[![EcoBites Demo Video](https://img.youtube.com/vi/CwN2WATvJYQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=CwN2WATvJYQ)
+[![EcoBites Demo Video](https://img.youtube.com/vi/CwN2WATvJYQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=CF33SMTZLdI)
 
-**[▶️ Watch on YouTube](https://www.youtube.com/watch?v=CwN2WATvJYQ)** | 4 minutes
+**[▶️ Watch on YouTube](https://www.youtube.com/watch?v=CF33SMTZLdI)** | 4 minutes
 
 </div>
 
