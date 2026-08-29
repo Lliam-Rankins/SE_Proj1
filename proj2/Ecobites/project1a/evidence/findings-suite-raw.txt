@@ -1,0 +1,172 @@
+(node:26883) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL tests/project1a/findings/requirement-gaps.test.mjs
+  Project 1a requirement findings (expected FAIL)
+    ✕ FIND-UC07 test_order_detail_refuses_non_owner_access (267 ms)
+    ✕ FIND-UC08 test_customer_cannot_cancel_after_DELIVERED (200 ms)
+    ✕ FIND-UC06 test_paymentMethod_is_persisted_on_created_order (1193 ms)
+    ✕ FIND-UC12 test_review_response_stats_match_stored_averageRating (207 ms)
+    ✕ FIND-UC15 test_combine_points_mint_five_dollar_reward_at_100 (205 ms)
+    ✕ FIND-UC17 test_restaurant_cannot_mark_ready_directly_from_PLACED (196 ms)
+    ✕ FIND-UC20 test_driver_cannot_mark_delivered_without_prior_pickup (186 ms)
+    ✕ FIND-UC15 test_mark_reward_used_requires_ownership (186 ms)
+    ✕ FIND-UC17 test_restaurant_timeout_auto_cancels_silent_order (228 ms)
+
+  ● Project 1a requirement findings (expected FAIL) › FIND-UC07 test_order_detail_refuses_non_owner_access
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      29 |     });
+      30 |     const res = await ctx.neighborAgent.get(`/api/orders/detail/${order._id}`);
+    > 31 |     expect(res.status).toBe(403);
+         |                        ^
+      32 |   });
+      33 |
+      34 |   test('FIND-UC08 test_customer_cannot_cancel_after_DELIVERED', async () => {
+
+      at Object.<anonymous> (tests/project1a/findings/requirement-gaps.test.mjs:31:24)
+
+  ● Project 1a requirement findings (expected FAIL) › FIND-UC08 test_customer_cannot_cancel_after_DELIVERED
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 200
+
+      44 |       .patch(`/api/orders/${order._id}/status`)
+      45 |       .send({ status: 'CANCELLED' });
+    > 46 |     expect(res.status).toBe(400);
+         |                        ^
+      47 |   });
+      48 |
+      49 |   test('FIND-UC06 test_paymentMethod_is_persisted_on_created_order', async () => {
+
+      at Object.<anonymous> (tests/project1a/findings/requirement-gaps.test.mjs:46:24)
+
+  ● Project 1a requirement findings (expected FAIL) › FIND-UC06 test_paymentMethod_is_persisted_on_created_order
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "cash"
+    Received: "card"
+
+      59 |     });
+      60 |     expect(res.status).toBe(201);
+    > 61 |     expect(res.body.paymentMethod).toBe('cash');
+         |                                    ^
+      62 |   }, 20000);
+      63 |
+      64 |   test('FIND-UC12 test_review_response_stats_match_stored_averageRating', async () => {
+
+      at Object.<anonymous> (tests/project1a/findings/requirement-gaps.test.mjs:61:36)
+
+  ● Project 1a requirement findings (expected FAIL) › FIND-UC12 test_review_response_stats_match_stored_averageRating
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 5
+    Received: 0
+
+      74 |     const stored = await User.findById(ctx.restaurant._id);
+      75 |     expect(stored.averageRating).toBe(5);
+    > 76 |     expect(res.body.stats.averageRating).toBe(5);
+         |                                          ^
+      77 |   });
+      78 |
+      79 |   test('FIND-UC15 test_combine_points_mint_five_dollar_reward_at_100', async () => {
+
+      at Object.<anonymous> (tests/project1a/findings/requirement-gaps.test.mjs:76:42)
+
+  ● Project 1a requirement findings (expected FAIL) › FIND-UC15 test_combine_points_mint_five_dollar_reward_at_100
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 1
+    Received:    0
+
+      100 |     const user = await User.findById(ctx.customer._id);
+      101 |     // 90 + 20 = 110 → should mint one $5 and leave remainder 10 if minting worked
+    > 102 |     expect(user.rewardHistory.length).toBeGreaterThanOrEqual(1);
+          |                                       ^
+      103 |     expect(user.rewardPoints).toBe(10);
+      104 |   });
+      105 |
+
+      at Object.<anonymous> (tests/project1a/findings/requirement-gaps.test.mjs:102:39)
+
+  ● Project 1a requirement findings (expected FAIL) › FIND-UC17 test_restaurant_cannot_mark_ready_directly_from_PLACED
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 200
+
+      116 |       .patch(`/api/orders/${order._id}/status`)
+      117 |       .send({ status: 'READY' });
+    > 118 |     expect(res.status).toBe(400);
+          |                        ^
+      119 |   });
+      120 |
+      121 |   test('FIND-UC20 test_driver_cannot_mark_delivered_without_prior_pickup', async () => {
+
+      at Object.<anonymous> (tests/project1a/findings/requirement-gaps.test.mjs:118:24)
+
+  ● Project 1a requirement findings (expected FAIL) › FIND-UC20 test_driver_cannot_mark_delivered_without_prior_pickup
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 200
+
+      132 |       .patch(`/api/orders/${order._id}/status`)
+      133 |       .send({ status: 'DELIVERED' });
+    > 134 |     expect(res.status).toBe(400);
+          |                        ^
+      135 |   });
+      136 |
+      137 |   test('FIND-UC15 test_mark_reward_used_requires_ownership', async () => {
+
+      at Object.<anonymous> (tests/project1a/findings/requirement-gaps.test.mjs:134:24)
+
+  ● Project 1a requirement findings (expected FAIL) › FIND-UC15 test_mark_reward_used_requires_ownership
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      146 |       `/api/profile/users/${ctx.customer._id}/rewards/${rewardId}/use`
+      147 |     );
+    > 148 |     expect(res.status).toBe(403);
+          |                        ^
+      149 |   });
+      150 |
+      151 |   test('FIND-UC17 test_restaurant_timeout_auto_cancels_silent_order', async () => {
+
+      at Object.<anonymous> (tests/project1a/findings/requirement-gaps.test.mjs:148:24)
+
+  ● Project 1a requirement findings (expected FAIL) › FIND-UC17 test_restaurant_timeout_auto_cancels_silent_order
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "CANCELLED"
+    Received: "PLACED"
+
+      162 |     await new Promise((r) => setTimeout(r, 50));
+      163 |     const still = await Order.findById(order._id);
+    > 164 |     expect(still.status).toBe('CANCELLED');
+          |                          ^
+      165 |   });
+      166 | });
+      167 |
+
+      at Object.<anonymous> (tests/project1a/findings/requirement-gaps.test.mjs:164:26)
+
+Test Suites: 1 failed, 1 total
+Tests:       9 failed, 9 total
+Snapshots:   0 total
+Time:        3.736 s, estimated 4 s
+Ran all test suites matching tests/project1a/findings.
