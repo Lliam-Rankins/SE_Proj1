@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for src/models/MenuItem.model.js</title>
+    <title>Code coverage report for src/models/Bid.model.js</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,13 +19,13 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/models</a> MenuItem.model.js</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/models</a> Bid.model.js</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -120,21 +120,9 @@
 <a name='L55'></a><a href='#L55'>55</a>
 <a name='L56'></a><a href='#L56'>56</a>
 <a name='L57'></a><a href='#L57'>57</a>
-<a name='L58'></a><a href='#L58'>58</a>
-<a name='L59'></a><a href='#L59'>59</a>
-<a name='L60'></a><a href='#L60'>60</a>
-<a name='L61'></a><a href='#L61'>61</a>
-<a name='L62'></a><a href='#L62'>62</a>
-<a name='L63'></a><a href='#L63'>63</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L58'></a><a href='#L58'>58</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -185,71 +173,68 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import mongoose from 'mongoose';
-const menuItemSchema = new mongoose.Schema({
-  restaurantId: {
+&nbsp;
+const bidSchema = new mongoose.Schema({
+  orderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order',
+    required: true
+  },
+  bidderId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: false,
-    default: null
-  },
-  name: {
-    type: String,
     required: true
   },
-  description: String,
-  price: {
+  bidAmount: {
     type: Number,
+    required: true,
+    min: 0
+  },
+  status: {
+    type: String,
+    enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'],
+    default: 'PENDING'
+  },
+  message: {
+    type: String,
+    maxlength: 500
+  },
+  // New customer's delivery address for this bid
+  deliveryAddress: {
+    street: String,
+    city: String,
+    zipCode: String,
+    coordinates: {
+      lat: Number,
+      lng: Number
+    }
+  },
+  // New customer's payment method preference
+  paymentMethod: {
+    type: String,
+    enum: ['cash', 'card', 'online'],
+    default: 'card'
+  },
+  expiresAt: {
+    type: Date,
     required: true
-  },
-  category: {
-    type: String,
-    enum: ['appetizer', 'main', 'dessert', 'beverage', 'side'],
-    required: false,
-    default: 'main'
-  },
-  image: String,
-  isAvailable: {
-    type: Boolean,
-    default: true
-  },
-  preparationTime: {
-    type: Number, // in minutes
-    default: 15
-  },
-  // Seasonal highlights
-  isSeasonal: {
-    type: Boolean,
-    default: false
-  },
-  seasonalLabel: {
-    type: String,
-    default: ''
-  },
-  seasonalRewardPoints: {
-    type: Number,
-    default: 0
-  },
-  // Supported sustainable packaging options for this item/restaurant
-  packagingOptions: {
-    type: [
-      {
-        type: String,
-        enum: ['reusable', 'compostable', 'minimal']
-      }
-    ],
-    default: ['reusable', 'compostable', 'minimal']
   }
 }, {
   timestamps: true
 });
 &nbsp;
-export const MenuItem = mongoose.model('MenuItem', menuItemSchema);
+// Index for efficient queries
+bidSchema.index({ orderId: 1, status: 1 });
+bidSchema.index({ bidderId: 1, status: 1 });
+bidSchema.index({ expiresAt: 1 });
 &nbsp;
-// Provide default export for compatibility with some tests/imports
-export default MenuItem;</pre></td></tr></table></pre>
+export const Bid = mongoose.model('Bid', bidSchema);
+export default Bid;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->

@@ -1,0 +1,145 @@
+(node:26372) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS tests/project1a/required/uc06-uc08-uc14-orders.test.mjs (8.609 s)
+  UC06 Place order
+    ✓ UC06-T01 test_place_order_creates_order_with_status_PLACED (1272 ms)
+    ✓ UC06-T02 test_rejects_empty_items (207 ms)
+    ✓ UC06-T03 test_rejects_invalid_menu_item_ids (189 ms)
+    ✓ UC06-T04 test_rejects_mixed_restaurant_items (228 ms)
+    ✓ UC06-T05 test_rejects_non_customer_creating_order (180 ms)
+    ✓ UC06-T06 test_unknown_packaging_defaults_to_standard_with_zero_points (1185 ms)
+    ✓ UC06-T07 test_seasonal_items_add_seasonalRewardPoints_to_ecoRewardPoints (1195 ms)
+  UC07 Track delivery
+    ✓ UC07-T01 test_customer_lists_own_orders_via_get_orders_by_role (201 ms)
+    ✓ UC07-T02 test_customer_cannot_list_another_users_orders (195 ms)
+    ✓ UC07-T03 test_get_order_detail_returns_status_and_history (193 ms)
+    ✓ UC07-T04 test_get_order_detail_returns_404_for_unknown_id (192 ms)
+    ✓ UC07-T05 test_combined_order_shows_combineGroupId_in_detail (202 ms)
+  UC08 Cancel an order
+    ✓ UC08-T01 test_customer_cancels_own_placed_order (201 ms)
+    ✓ UC08-T02 test_restaurant_cannot_cancel_order (197 ms)
+    ✓ UC08-T03 test_non_owner_cannot_cancel (198 ms)
+    ✓ UC08-T04 test_cancelled_unclaimed_order_appears_in_bid_list (202 ms)
+  UC14 Choose sustainable packaging
+    ✓ UC14-T01 test_update_preferences_saves_reusable_packaging (194 ms)
+    ✓ UC14-T02 test_rejects_invalid_packaging_preference (192 ms)
+    ✓ UC14-T03 test_place_order_persists_packaging_and_ecoRewardPoints (1194 ms)
+
+PASS tests/project1a/required/uc15-uc17-rewards-menu-fulfill.test.mjs
+  UC15 Redeem eco-rewards
+    ✓ UC15-T01 test_adding_100_points_mints_one_five_dollar_reward (246 ms)
+    ✓ UC15-T02 test_mark_reward_used_sets_used_true (195 ms)
+    ✓ UC15-T03 test_rejects_mark_already_used_reward (187 ms)
+    ✓ UC15-T04 test_reward_redemption_does_not_change_order_total_on_server (1196 ms)
+  UC16 Manage the menu
+    ✓ UC16-T01 test_restaurant_creates_menu_item_under_own_id (189 ms)
+    ✓ UC16-T02 test_non_restaurant_cannot_create_menu_item (175 ms)
+    ✓ UC16-T03 test_restaurant_cannot_add_item_to_other_restaurant (220 ms)
+    ✓ UC16-T04 test_restaurant_updates_and_deletes_own_menu_item (187 ms)
+    ✓ UC16-T05 test_create_seasonal_item_with_bonus_points (178 ms)
+    ✓ UC16-T06 test_deleted_item_causes_place_order_to_fail (188 ms)
+  UC17 Fulfill order
+    ✓ UC17-T01 test_restaurant_lists_incoming_orders (179 ms)
+    ✓ UC17-T02 test_restaurant_marks_order_preparing_then_ready (192 ms)
+    ✓ UC17-T03 test_restaurant_cannot_set_CANCELLED (181 ms)
+    ✓ UC17-T04 test_combined_order_visible_to_drivers_without_READY_status (187 ms)
+
+PASS tests/project1a/required/uc12-uc13-uc18-reviews.test.mjs
+  UC12 Rate the restaurant
+    ✓ UC12-T01 test_customer_creates_review_and_updates_stored_averageRating (243 ms)
+    ✓ UC12-T02 test_rejects_rating_outside_1_to_5 (184 ms)
+    ✓ UC12-T03 test_rejects_duplicate_review_same_restaurant (191 ms)
+    ✓ UC12-T04 test_allows_review_without_orderId_unverified (200 ms)
+    ✓ UC12-T05 test_rejects_review_when_orderId_not_delivered (188 ms)
+    ✓ UC12-T06 test_customer_updates_own_review (197 ms)
+  UC13 Mark a review helpful
+    ✓ UC13-T01 test_mark_helpful_increments_count (200 ms)
+    ✓ UC13-T02 test_second_mark_toggles_off_and_decrements (204 ms)
+    ✓ UC13-T03 test_mark_helpful_returns_404_for_missing_review (179 ms)
+    ✓ UC13-T04 test_author_can_mark_own_review_helpful (201 ms)
+  UC18 Respond to a review
+    ✓ UC18-T01 test_restaurant_posts_response_on_own_review (201 ms)
+    ✓ UC18-T02 test_non_restaurant_cannot_respond (199 ms)
+    ✓ UC18-T03 test_cannot_respond_to_another_restaurants_review (242 ms)
+    ✓ UC18-T04 test_empty_response_is_still_saved (190 ms)
+    ✓ UC18-T05 test_second_response_overwrites_first (200 ms)
+
+PASS tests/project1a/required/uc10-uc11-bids.test.mjs
+  UC10 Bid on a cancelled order
+    ✓ UC10-T01 test_lists_cancelled_unclaimed_orders (245 ms)
+    ✓ UC10-T02 test_customer_places_pending_bid_with_expiry (196 ms)
+    ✓ UC10-T03 test_rejects_bid_on_non_cancelled_order (189 ms)
+    ✓ UC10-T04 test_rejects_bid_by_original_customer (197 ms)
+    ✓ UC10-T05 test_rejects_duplicate_pending_bid_same_bidder (205 ms)
+    ✓ UC10-T06 test_rejects_bid_from_non_customer_role (188 ms)
+    ✓ UC10-T07 test_bidder_cancels_own_pending_bid (194 ms)
+    ✓ UC10-T08 test_rejects_negative_or_missing_bidAmount (195 ms)
+  UC11 Accept a bid
+    ✓ UC11-T01 test_accepts_bid_transfers_order_and_rejects_others (268 ms)
+    ✓ UC11-T02 test_awards_30_points_to_original_customer (210 ms)
+    ✓ UC11-T03 test_rejects_accept_by_non_owner (205 ms)
+    ✓ UC11-T04 test_rejects_accept_of_expired_bid (202 ms)
+    ✓ UC11-T05 test_reject_single_bid_leaves_order_cancelled (209 ms)
+    ✓ UC11-T06 test_original_customer_lists_bids_sorted_by_amount (255 ms)
+
+PASS tests/project1a/required/uc19-uc20-driver.test.mjs
+  UC19 Accept a delivery job
+    ✓ UC19-T01 test_driver_lists_available_ready_and_combined_orders (247 ms)
+    ✓ UC19-T02 test_non_driver_cannot_access_available_list (199 ms)
+    ✓ UC19-T03 test_driver_assigns_self_to_order (208 ms)
+    ✓ UC19-T04 test_driver_cannot_assign_without_driver_role (183 ms)
+    ✓ UC19-T05 test_assigning_driver_propagates_to_combine_group (200 ms)
+    ✓ UC19-T06 test_assigned_order_removed_from_available_list (200 ms)
+  UC20 Deliver order
+    ✓ UC20-T01 test_driver_marks_picked_up_out_for_delivery_delivered (211 ms)
+    ✓ UC20-T02 test_delivery_credits_customer_ecoRewardPoints_once (197 ms)
+    ✓ UC20-T03 test_delivery_skips_credit_when_ecoRewardPoints_zero (190 ms)
+    ✓ UC20-T04 test_delivery_credits_driver_incentive_for_EV (186 ms)
+    ✓ UC20-T05 test_driver_default_vehicle_gets_five_points (186 ms)
+    ✓ UC20-T06 test_non_driver_cannot_mark_delivery_statuses (185 ms)
+
+PASS tests/project1a/required/uc09-combine.test.mjs
+  UC09 Combine orders with neighbors
+    ✓ UC09-T01 test_combines_nearby_orders_in_same_city_and_zip (277 ms)
+    ✓ UC09-T02 test_awards_20_eco_points_to_each_participant (212 ms)
+    ✓ UC09-T03 test_returns_empty_when_no_neighbors (197 ms)
+    ✓ UC09-T04 test_rejects_when_customer_has_no_active_order (193 ms)
+    ✓ UC09-T05 test_does_not_combine_different_city_or_zip (195 ms)
+    ✓ UC09-T06 test_does_not_combine_ACCEPTED_only_orders (186 ms)
+
+PASS tests/project1a/required/uc03-uc05-browse-menu.test.mjs
+  UC03 Browse restaurants
+    ✓ UC03-T01 test_lists_restaurants_with_count_and_data_array (139 ms)
+    ✓ UC03-T02 test_get_restaurant_by_id_returns_profile (51 ms)
+    ✓ UC03-T03 test_get_restaurant_by_id_returns_404_for_non_restaurant (93 ms)
+    ✓ UC03-T04 test_list_includes_restaurant_even_when_isAvailable_false (56 ms)
+  UC04 View a restaurant menu
+    ✓ UC04-T01 test_get_menu_returns_available_items_only (57 ms)
+    ✓ UC04-T02 test_get_menu_returns_empty_array_when_none_available (53 ms)
+    ✓ UC04-T03 test_get_menu_is_public_without_auth (54 ms)
+  UC05 Discover seasonal items
+    ✓ UC05-T01 test_get_seasonal_all_returns_only_seasonal_available_items (52 ms)
+    ✓ UC05-T02 test_get_seasonal_all_limits_to_20_most_recent (82 ms)
+    ✓ UC05-T03 test_seasonal_item_unavailable_excluded_from_lists (49 ms)
+
+PASS tests/project1a/required/uc01-uc02-auth.test.mjs
+  UC01 Register for the platform
+    ✓ UC01-T01 test_registers_customer_returns_201_and_sets_cookie (103 ms)
+    ✓ UC01-T02 test_rejects_duplicate_email (55 ms)
+    ✓ UC01-T03 test_rejects_password_shorter_than_6 (3 ms)
+    ✓ UC01-T04 test_rejects_missing_required_fields (3 ms)
+    ✓ UC01-T05 test_defaults_role_to_customer_when_omitted (97 ms)
+    ✓ UC01-T06 test_registers_restaurant_and_driver_with_role_fields (100 ms)
+  UC02 Log in
+    ✓ UC02-T01 test_login_valid_credentials_sets_cookie_and_returns_user (95 ms)
+    ✓ UC02-T02 test_login_invalid_password_returns_401 (95 ms)
+    ✓ UC02-T03 test_login_unknown_email_returns_same_invalid_credentials (8 ms)
+    ✓ UC02-T04 test_me_returns_user_when_authenticated (54 ms)
+    ✓ UC02-T05 test_me_returns_401_without_cookie (3 ms)
+    ✓ UC02-T06 test_logout_clears_cookie (49 ms)
+
+Test Suites: 8 passed, 8 total
+Tests:       102 passed, 102 total
+Snapshots:   0 total
+Time:        28.546 s
+Ran all test suites matching tests/project1a/required.
