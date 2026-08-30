@@ -27,6 +27,7 @@ describe('Project 1a requirement findings (expected FAIL)', () => {
       restaurantId: ctx.restaurant._id,
       menuItem: ctx.menuItem,
     });
+    // Act: neighbor fetches Alice's order detail — should be 403 per D2.
     const res = await ctx.neighborAgent.get(`/api/orders/detail/${order._id}`);
     expect(res.status).toBe(403);
   });
@@ -73,6 +74,7 @@ describe('Project 1a requirement findings (expected FAIL)', () => {
     expect(res.status).toBe(201);
     const stored = await User.findById(ctx.restaurant._id);
     expect(stored.averageRating).toBe(5);
+    // Finding: API stats object does not mirror DB aggregate.
     expect(res.body.stats.averageRating).toBe(5);
   });
 
@@ -98,7 +100,7 @@ describe('Project 1a requirement findings (expected FAIL)', () => {
       customerId: ctx.customer._id,
     });
     const user = await User.findById(ctx.customer._id);
-    // 90 + 20 = 110 → should mint one $5 and leave remainder 10 if minting worked
+    // 90 + 20 = 110 → should mint one $5 and leave remainder 10 if minting worked.
     expect(user.rewardHistory.length).toBeGreaterThanOrEqual(1);
     expect(user.rewardPoints).toBe(10);
   });
@@ -142,6 +144,7 @@ describe('Project 1a requirement findings (expected FAIL)', () => {
       .send({ points: 100 });
     const user = await User.findById(ctx.customer._id);
     const rewardId = user.rewardHistory[0]._id;
+    // Act: neighbor tries to spend Alice's reward.
     const res = await ctx.neighborAgent.patch(
       `/api/profile/users/${ctx.customer._id}/rewards/${rewardId}/use`
     );
@@ -158,7 +161,7 @@ describe('Project 1a requirement findings (expected FAIL)', () => {
       menuItem: ctx.menuItem,
       status: 'PLACED',
     });
-    // Simulate "N minutes later" with no restaurant action
+    // Simulate "N minutes later" with no restaurant action.
     await new Promise((r) => setTimeout(r, 50));
     const still = await Order.findById(order._id);
     expect(still.status).toBe('CANCELLED');
