@@ -1,0 +1,29 @@
+
+> client@0.0.0 test
+> vitest --run --silent
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[1m[46m RUN [49m[22m [36mv4.0.6 [39m[90m/Users/parth/Downloads/CSC 510/SE_Proj1/proj2/Ecobites/client[39m
+
+ [32m✓[39m src/tests/services/review.service.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/services/user.service.test.js [2m([22m[2m12 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/services/menu.service.test.js [2m([22m[2m15 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/services/profile.service.test.js [2m([22m[2m12 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/services/auth.service.test.js [2m([22m[2m13 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/services/restaurant.service.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/OrderStatus.test.jsx [2m([22m[2m1 test[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m src/tests/OrderDetail.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[32m 173[2mms[22m[39m
+ [32m✓[39m src/tests/Login.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[32m 180[2mms[22m[39m
+ [32m✓[39m src/tests/CustomerOrders.test.jsx [2m([22m[2m11 tests[22m[2m)[22m[32m 234[2mms[22m[39m
+ [32m✓[39m src/tests/CombineOrders.test.jsx [2m([22m[2m5 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/services/order.service.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/MenuItems.test.jsx [2m([22m[2m10 tests[22m[2m)[22m[33m 391[2mms[22m[39m
+ [32m✓[39m src/tests/Review.test.jsx [2m([22m[2m14 tests[22m[2m)[22m[33m 361[2mms[22m[39m
+ [32m✓[39m src/tests/Drivers.test.jsx [2m([22m[2m21 tests[22m[2m)[22m[33m 702[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m      Tests [22m [1m[32m154 passed[39m[22m[90m (154)[39m
+[2m   Start at [22m 22:07:33
+[2m   Duration [22m 1.81s[2m (transform 1.44s, setup 1.31s, collect 3.33s, tests 2.12s, environment 8.64s, prepare 103ms)[22m
+
