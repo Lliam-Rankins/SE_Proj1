@@ -16,6 +16,7 @@ setupProject1aDb();
 describe('UC12 Rate the restaurant', () => {
   test('UC12-T01 test_customer_creates_review_and_updates_stored_averageRating', async () => {
     const ctx = await seedMarketplaceActors();
+    // Act: POST review with rating 5.
     const res = await ctx.customerAgent.post('/api/reviews').send({
       restaurantId: ctx.restaurant._id,
       rating: 5,
@@ -23,6 +24,7 @@ describe('UC12 Rate the restaurant', () => {
     });
     expect(res.status).toBe(201);
     expect(res.body.review.rating).toBe(5);
+    // Assert: restaurant aggregate fields updated in User document.
     const restaurant = await User.findById(ctx.restaurant._id);
     expect(restaurant.averageRating).toBe(5);
     expect(restaurant.totalReviews).toBe(1);
@@ -43,6 +45,7 @@ describe('UC12 Rate the restaurant', () => {
       restaurantId: ctx.restaurant._id,
       rating: 4,
     });
+    // Act: second review from same customer for same restaurant.
     const res = await ctx.customerAgent.post('/api/reviews').send({
       restaurantId: ctx.restaurant._id,
       rating: 5,
@@ -53,6 +56,7 @@ describe('UC12 Rate the restaurant', () => {
 
   test('UC12-T04 test_allows_review_without_orderId_unverified', async () => {
     const ctx = await seedMarketplaceActors();
+    // Act: review without linking a delivered order.
     const res = await ctx.customerAgent.post('/api/reviews').send({
       restaurantId: ctx.restaurant._id,
       rating: 3,
@@ -69,6 +73,7 @@ describe('UC12 Rate the restaurant', () => {
       menuItem: ctx.menuItem,
       status: 'PLACED',
     });
+    // Act: attach PLACED (not DELIVERED) order — verified review blocked.
     const res = await ctx.customerAgent.post('/api/reviews').send({
       restaurantId: ctx.restaurant._id,
       orderId: order._id,
@@ -83,6 +88,7 @@ describe('UC12 Rate the restaurant', () => {
       restaurantId: ctx.restaurant._id,
       rating: 3,
     });
+    // Act: PUT updated rating and comment.
     const res = await ctx.customerAgent
       .put(`/api/reviews/${created.body.review._id}`)
       .send({ rating: 5, comment: 'Updated' });
@@ -98,6 +104,7 @@ describe('UC13 Mark a review helpful', () => {
       restaurantId: ctx.restaurant._id,
       rating: 5,
     });
+    // Act: neighbor marks review helpful.
     const res = await ctx.neighborAgent.post(
       `/api/reviews/${created.body.review._id}/helpful`
     );
@@ -113,6 +120,7 @@ describe('UC13 Mark a review helpful', () => {
     });
     const id = created.body.review._id;
     await ctx.neighborAgent.post(`/api/reviews/${id}/helpful`);
+    // Act: second click toggles helpful off.
     const res = await ctx.neighborAgent.post(`/api/reviews/${id}/helpful`);
     expect(res.status).toBe(200);
     const review = await Review.findById(id);
@@ -133,6 +141,7 @@ describe('UC13 Mark a review helpful', () => {
       restaurantId: ctx.restaurant._id,
       rating: 5,
     });
+    // Act: self-vote allowed by current product behavior.
     const res = await ctx.customerAgent.post(
       `/api/reviews/${created.body.review._id}/helpful`
     );
@@ -148,6 +157,7 @@ describe('UC18 Respond to a review', () => {
       rating: 4,
       comment: 'Good',
     });
+    // Act: restaurant owner replies to review on their profile.
     const res = await ctx.restaurantAgent
       .post(`/api/reviews/${created.body.review._id}/response`)
       .send({ response: 'Thanks for dining with us!' });
@@ -161,6 +171,7 @@ describe('UC18 Respond to a review', () => {
       restaurantId: ctx.restaurant._id,
       rating: 3,
     });
+    // Act: customer tries to post restaurant response.
     const res = await ctx.customerAgent
       .post(`/api/reviews/${created.body.review._id}/response`)
       .send({ response: 'Nope' });
@@ -179,6 +190,7 @@ describe('UC18 Respond to a review', () => {
       restaurantId: ctx.restaurant._id,
       rating: 2,
     });
+    // Act: wrong restaurant attempts response — 404.
     const res = await otherAgent
       .post(`/api/reviews/${created.body.review._id}/response`)
       .send({ response: 'Wrong place' });
@@ -207,6 +219,7 @@ describe('UC18 Respond to a review', () => {
     await ctx.restaurantAgent
       .post(`/api/reviews/${id}/response`)
       .send({ response: 'First' });
+    // Act: second response replaces first.
     const res = await ctx.restaurantAgent
       .post(`/api/reviews/${id}/response`)
       .send({ response: 'Second' });

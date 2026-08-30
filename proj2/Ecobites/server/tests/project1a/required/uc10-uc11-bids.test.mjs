@@ -16,6 +16,7 @@ import { newAgent, registerCustomer } from '../helpers/auth.mjs';
 
 setupProject1aDb();
 
+/** Shared bid payload for UC10/UC11 — neighbor offers to claim cancelled order. */
 const placeBidPayload = (orderId) => ({
   orderId,
   bidAmount: 8,
@@ -33,6 +34,7 @@ describe('UC10 Bid on a cancelled order', () => {
       menuItem: ctx.menuItem,
       status: 'CANCELLED',
     });
+    // Act: browse pool of cancelled orders open for bids.
     const res = await ctx.neighborAgent.get('/api/bids/cancelled-orders');
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -49,9 +51,11 @@ describe('UC10 Bid on a cancelled order', () => {
       menuItem: ctx.menuItem,
       status: 'CANCELLED',
     });
+    // Act: neighbor places bid.
     const res = await ctx.neighborAgent
       .post('/api/bids')
       .send(placeBidPayload(order._id));
+    // Assert: PENDING status and future expiresAt timestamp.
     expect(res.status).toBe(201);
     expect(res.body.data.status).toBe('PENDING');
     expect(new Date(res.body.data.expiresAt).getTime()).toBeGreaterThan(
@@ -82,6 +86,7 @@ describe('UC10 Bid on a cancelled order', () => {
       menuItem: ctx.menuItem,
       status: 'CANCELLED',
     });
+    // Act: original canceller cannot bid on own order.
     const res = await ctx.customerAgent
       .post('/api/bids')
       .send(placeBidPayload(order._id));
@@ -98,6 +103,7 @@ describe('UC10 Bid on a cancelled order', () => {
       status: 'CANCELLED',
     });
     await ctx.neighborAgent.post('/api/bids').send(placeBidPayload(order._id));
+    // Act: second bid from same neighbor.
     const res = await ctx.neighborAgent
       .post('/api/bids')
       .send(placeBidPayload(order._id));
@@ -113,6 +119,7 @@ describe('UC10 Bid on a cancelled order', () => {
       menuItem: ctx.menuItem,
       status: 'CANCELLED',
     });
+    // Act: driver (not customer) attempts bid.
     const res = await ctx.driverAgent
       .post('/api/bids')
       .send(placeBidPayload(order._id));
@@ -131,6 +138,7 @@ describe('UC10 Bid on a cancelled order', () => {
       .post('/api/bids')
       .send(placeBidPayload(order._id));
     const bidId = placed.body.data._id;
+    // Act: DELETE own bid.
     const res = await ctx.neighborAgent.delete(`/api/bids/${bidId}`);
     expect(res.status).toBe(200);
     const bid = await Bid.findById(bidId);
@@ -170,6 +178,7 @@ describe('UC11 Accept a bid', () => {
       status: 'CANCELLED',
       extras: { total: 20 },
     });
+    // Arrange: two competing bids ($10 and $9).
     const bid1 = await ctx.neighborAgent
       .post('/api/bids')
       .send({ ...placeBidPayload(order._id), bidAmount: 10 });
@@ -177,11 +186,13 @@ describe('UC11 Accept a bid', () => {
       .post('/api/bids')
       .send({ ...placeBidPayload(order._id), bidAmount: 9 });
 
+    // Act: original customer accepts higher bid.
     const res = await ctx.customerAgent
       .post(`/api/bids/${bid1.body.data._id}/accept`)
       .send({});
     expect(res.status).toBe(200);
 
+    // Assert: order transferred to winning bidder, total = bid amount, loser rejected.
     const updated = await Order.findById(order._id);
     expect(String(updated.customerId)).toBe(String(ctx.neighbor._id));
     expect(updated.status).toBe('PLACED');
@@ -222,6 +233,7 @@ describe('UC11 Accept a bid', () => {
     const bid = await ctx.neighborAgent
       .post('/api/bids')
       .send(placeBidPayload(order._id));
+    // Act: bidder tries to accept own bid — only original customer may.
     const res = await ctx.neighborAgent
       .post(`/api/bids/${bid.body.data._id}/accept`)
       .send({});
@@ -236,6 +248,7 @@ describe('UC11 Accept a bid', () => {
       menuItem: ctx.menuItem,
       status: 'CANCELLED',
     });
+    // Arrange: bid inserted directly with past expiresAt.
     const bid = await Bid.create({
       orderId: order._id,
       bidderId: ctx.neighbor._id,
@@ -263,6 +276,7 @@ describe('UC11 Accept a bid', () => {
     const bid = await ctx.neighborAgent
       .post('/api/bids')
       .send(placeBidPayload(order._id));
+    // Act: owner rejects bid instead of accepting.
     const res = await ctx.customerAgent
       .post(`/api/bids/${bid.body.data._id}/reject`)
       .send({});
@@ -289,6 +303,7 @@ describe('UC11 Accept a bid', () => {
     await third
       .post('/api/bids')
       .send({ ...placeBidPayload(order._id), bidAmount: 11 });
+    // Act: owner lists bids for order — highest amount first.
     const res = await ctx.customerAgent.get(`/api/bids/order/${order._id}`);
     expect(res.status).toBe(200);
     expect(res.body.data[0].bidAmount).toBeGreaterThanOrEqual(

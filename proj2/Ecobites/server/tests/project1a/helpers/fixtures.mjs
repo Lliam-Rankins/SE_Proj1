@@ -1,6 +1,9 @@
 /**
  * Deliverable support: D3 only (not a Moodle hand-in artifact)
  * Purpose: seed restaurant/menu/order fixtures for UC6–UC20 tests
+ *
+ * Central place for test addresses, marketplace actors, and direct DB seeding.
+ * Prefer createSeededOrder over placeOrderViaApi when geocoding latency is not under test.
  */
 import { MenuItem } from '../../../src/models/MenuItem.model.js';
 import { Order } from '../../../src/models/Order.model.js';
@@ -14,6 +17,7 @@ import {
   registerDriver,
 } from './auth.mjs';
 
+/** Default Raleigh delivery address used across order/combine/bid tests. */
 export const raleighAddress = (overrides = {}) => ({
   street: overrides.street || '100 Main St',
   city: overrides.city || 'Raleigh',
@@ -21,12 +25,14 @@ export const raleighAddress = (overrides = {}) => ({
   coordinates: overrides.coordinates || { lat: 35.78, lng: -78.67 },
 });
 
+/** Slightly offset coords — within combine radius of raleighAddress. */
 export const nearbyAddress = () =>
   raleighAddress({
     street: '110 Main St',
     coordinates: { lat: 35.7805, lng: -78.6705 },
   });
 
+/** Different city/zip — should NOT match combine logic with Raleigh orders. */
 export const farAddress = () =>
   raleighAddress({
     street: '1 Far Rd',
@@ -38,6 +44,8 @@ export const farAddress = () =>
 /**
  * Seeds a restaurant + one menu item + optional customer/driver agents.
  * Prefer seeding Order.create for non-UC6 flows to avoid createOrder's 1s geocode sleep.
+ *
+ * Returns four authenticated agents and their user records plus one menu item.
  */
 export const seedMarketplaceActors = async () => {
   const restaurantAgent = newAgent();
@@ -79,6 +87,10 @@ export const seedMarketplaceActors = async () => {
   };
 };
 
+/**
+ * Insert an Order document directly (bypasses HTTP + geocoding).
+ * Use extras to set combineGroupId, driverId, claimedBy, etc.
+ */
 export const createSeededOrder = async ({
   customerId,
   restaurantId,
@@ -114,6 +126,7 @@ export const createSeededOrder = async ({
   return order;
 };
 
+/** POST /api/orders through the HTTP stack (exercises createOrder + geocode path). */
 export const placeOrderViaApi = async (
   agent,
   { customerId, restaurantId, menuItemId, packagingPreference = 'reusable', deliveryAddress = raleighAddress(), extras = {} }
@@ -129,4 +142,5 @@ export const placeOrderViaApi = async (
   });
 };
 
+// Re-export models so tests can assert DB state without extra import paths.
 export { MenuItem, Order, Bid, Review, User };
