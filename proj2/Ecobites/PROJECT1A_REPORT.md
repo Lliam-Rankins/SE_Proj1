@@ -505,3 +505,46 @@ This is the honest version for D5: concise, evidence-based, and not padded.
 **Project URL:** https://github.com/Lliam-Rankins/SE_Proj1  
 **Test suites:** 6 passing, 26 tests passing, 0 failures  
 **Status:** Ready for video + final LaTeX output
+---
+
+## D3 — Test runs: UC01–UC05 (required) and findings
+
+### Tests executed
+- Command: `npm run test:1a:required` (server tests for required Project1a files)
+- Files: `tests/project1a/required/uc01-uc02-auth.test.mjs`, `tests/project1a/required/uc03-uc05-browse-menu.test.mjs`
+- Result: all tests in these files passed on branch `rudraksh/dev` when run locally.
+
+### Results table — UC01 & UC02 (auth)
+| Test | Why we tried it | Expected | What happened |
+|---|---:|---|---|
+| UC01-T01 test_registers_customer_returns_201_and_sets_cookie | Verify registration happy path creates user and sets HttpOnly JWT cookie (UC1) | 201, set-cookie token, returned user (no token in body) | PASS — 201, cookie set, user returned; no token field in body |
+| UC01-T02 test_rejects_duplicate_email | Ensure uniqueness constraint on email (UC1 ext 1c) | 400 with duplicate-email error | PASS — 400 and error message contains already registered |
+| UC01-T03 test_rejects_password_shorter_than_6 | Input validation on password length (UC1 ext 1b) | 400 validation error mentioning min length | PASS — 400 with message about at least 6 |
+| UC01-T04 test_rejects_missing_required_fields | Required-fields validation (UC1 ext 1a) | 400 listing missing fields | PASS — 400 with missing fields error |
+| UC01-T05 test_defaults_role_to_customer_when_omitted | Registration default role behaviour | 201; returned user role === 'customer' | PASS — 201 and returned user.role is 'customer' |
+| UC01-T06 test_registers_restaurant_and_driver_with_role_fields | Role-specific fields persist for restaurant/driver | 201 and returned user includes restaurantName / vehicleType | PASS — 201 and role-specific fields present |
+| UC02-T01 test_login_valid_credentials_sets_cookie_and_returns_user | Login sets cookie and returns user (UC2) | 200, set-cookie token, returned user email matches | PASS — 200, cookie set, user email matches |
+| UC02-T02 test_login_invalid_password_returns_401 | Wrong password should not authenticate | 401 with generic invalid credentials | PASS — 401 with invalid credentials message |
+| UC02-T03 test_login_unknown_email_returns_same_invalid_credentials | Avoid user enumeration; unknown email returns same 401 | 401 with same message as wrong password | PASS — 401 with invalid credentials message |
+| UC02-T04 test_me_returns_user_when_authenticated | /me should return user when authenticated | 200 with user object matching session | PASS — 200 and returned user id matches |
+| UC02-T05 test_me_returns_401_without_cookie | Unauthenticated /me should be 401 | 401 unauthorized | PASS — 401 |
+| UC02-T06 test_logout_clears_cookie | Logout should clear the session cookie | 200 and message confirming logout (cookie cleared server-side) | PASS — 200 and logout message present |
+
+### Results table — UC03–UC05 (browse/menu/seasonal)
+| Test | Why we tried it | Expected | What happened |
+|---|---:|---|---|
+| UC03-T01 test_lists_restaurants_with_count_and_data_array | Public restaurant list endpoint should return structured list (UC3) | 200, { success:true, count: >= N, data: Array } | PASS — 200, success true, count >= 2, data array |
+| UC03-T02 test_get_restaurant_by_id_returns_profile | Restaurant profile endpoint returns restaurant fields and recentReviews | 200, restaurantName matches, recentReviews property present | PASS — 200 and recentReviews present |
+| UC03-T03 test_get_restaurant_by_id_returns_404_for_non_restaurant | Requesting profile for non-restaurant ObjectId should 404 | 404 | PASS — 404 |
+| UC03-T04 test_list_includes_restaurant_even_when_isAvailable_false | List must include restaurants even if isAvailable false | 200 and item found with isAvailable === false | PASS — 200 and isAvailable=false present |
+| UC04-T01 test_get_menu_returns_available_items_only | Menu endpoint only returns items marked isAvailable true | 200 and returned array contains only available items | PASS — 200 and only available items returned |
+| UC04-T02 test_get_menu_returns_empty_array_when_none_available | If no items available, endpoint returns empty array (not 404) | 200 and body === [] | PASS — 200 and empty array |
+| UC04-T03 test_get_menu_is_public_without_auth | Menu read does not require authentication | 200 and item details returned with unauthenticated agent | PASS — 200 and item visible |
+| UC05-T01 test_get_seasonal_all_returns_only_seasonal_available_items | Global seasonal list returns only seasonal items flagged and available | 200 and every result has isSeasonal === true; expected seasonal item present | PASS — 200 and seasonal items only |
+| UC05-T02 test_get_seasonal_all_limits_to_20_most_recent | Seasonal listing is capped to 20 most recent | 200 and returned length <= 20 | PASS — 200 and length <= 20 |
+| UC05-T03 test_seasonal_item_unavailable_excluded_from_lists | Per-restaurant seasonal sub-route excludes unavailable seasonal items | 200 and returned length === 0 for unavailable seasonal item | PASS — 200 and empty list |
+
+### Raw output (selected)
+- The full required-tests output is saved in `proj2/Ecobites/server_test_output.txt` (committed to branch `project1a-report`).
+- The findings-tests output is saved in `server_findings_test_output.txt` at the repo root and included here for evidence.
+
