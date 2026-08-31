@@ -1,0 +1,406 @@
+% =============================================================================
+% Project 1a hand-in fragment --- ONLY D3 and D4 from
+% https://github.com/txt/se26f/blob/main/docs/submit/1/proj1a.md
+% D1 (product choice), D2 (20 use cases), D5 (prompt notes) are NOT in this file.
+% Paste into the ACM acmart report or \input{} this file.
+% =============================================================================
+
+\section{D3: Tests}
+\label{sec:d3}
+\textit{Deliverable D3 --- assignment checklist: code link; raw test output samples;
+results table (test / why / expected / what happened); failures explained.}
+
+Student-authored Jest tests for the D2 use cases (UC1--UC20) live at:
+
+\url{https://github.com/Lliam-Rankins/SE_Proj1/tree/rudraksh/dev/proj2/Ecobites/server/tests/project1a}
+
+\paragraph{Assumptions (stated, not hidden).}
+In-memory MongoDB; axios mocked only in Project~1a helpers so geocoding fails closed
+into the product's Raleigh hash fallback; production code unchanged.
+
+\paragraph{Raw output samples (D3).}
+Files:
+\texttt{proj2/Ecobites/project1a/evidence/required-suite-raw.txt} and
+\texttt{proj2/Ecobites/project1a/evidence/findings-suite-raw.txt}.
+
+\begin{verbatim}
+# required suite (supported UC behavior)
+Test Suites: 8 passed, 8 total
+Tests:       102 passed, 102 total
+\end{verbatim}
+
+\begin{verbatim}
+# findings suite (D2 extensions the product lacks --- honest FAIL)
+FIND-UC07 ... Expected: 403  Received: 200
+FIND-UC08 ... Expected: 400  Received: 200
+FIND-UC06 ... Expected: "cash" Received: "card"
+FIND-UC17 ... Expected: "CANCELLED" Received: "PLACED"
+Tests: 9 failed, 9 total
+\end{verbatim}
+
+\paragraph{Results table (D3).}
+\begin{table*}[t]
+\caption{D3 results: required tests 1--28 of 102 (UC coverage).}
+\label{tab:d3r1}
+\centering\scriptsize
+\begin{tabular}{p{3.8cm}p{3.6cm}p{2.8cm}p{2.0cm}}
+\toprule
+Test & Why we tried it & Expected & What happened \\
+\midrule
+UC01-T01 & UC1: registers customer returns 201 and sets cook & UC behavior & PASS \\
+UC01-T02 & UC1: rejects duplicate email & UC behavior & PASS \\
+UC01-T03 & UC1: rejects password shorter than 6 & UC behavior & PASS \\
+UC01-T04 & UC1: rejects missing required fields & UC behavior & PASS \\
+UC01-T05 & UC1: defaults role to customer when omitted & UC behavior & PASS \\
+UC01-T06 & UC1: registers restaurant and driver with role fi & UC behavior & PASS \\
+UC02-T01 & UC2: login valid credentials sets cookie and retu & UC behavior & PASS \\
+UC02-T02 & UC2: login invalid password returns 401 & UC behavior & PASS \\
+UC02-T03 & UC2: login unknown email returns same invalid cre & UC behavior & PASS \\
+UC02-T04 & UC2: me returns user when authenticated & UC behavior & PASS \\
+UC02-T05 & UC2: me returns 401 without cookie & UC behavior & PASS \\
+UC02-T06 & UC2: logout clears cookie & UC behavior & PASS \\
+UC03-T01 & UC3: lists restaurants with count and data array & UC behavior & PASS \\
+UC03-T02 & UC3: get restaurant by id returns profile & UC behavior & PASS \\
+UC03-T03 & UC3: get restaurant by id returns 404 for non res & UC behavior & PASS \\
+UC03-T04 & UC3: list includes restaurant even when isAvailab & UC behavior & PASS \\
+UC04-T01 & UC4: get menu returns available items only & UC behavior & PASS \\
+UC04-T02 & UC4: get menu returns empty array when none avail & UC behavior & PASS \\
+UC04-T03 & UC4: get menu is public without auth & UC behavior & PASS \\
+UC05-T01 & UC5: get seasonal all returns only seasonal avail & UC behavior & PASS \\
+UC05-T02 & UC5: get seasonal all limits to 20 most recent & UC behavior & PASS \\
+UC05-T03 & UC5: seasonal item unavailable excluded from list & UC behavior & PASS \\
+UC06-T01 & UC6: place order creates order with status PLACED & UC behavior & PASS \\
+UC06-T02 & UC6: rejects empty items & UC behavior & PASS \\
+UC06-T03 & UC6: rejects invalid menu item ids & UC behavior & PASS \\
+UC06-T04 & UC6: rejects mixed restaurant items & UC behavior & PASS \\
+UC06-T05 & UC6: rejects non customer creating order & UC behavior & PASS \\
+UC06-T06 & UC6: unknown packaging defaults to standard with  & UC behavior & PASS \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{D3 results: required tests 29--56 of 102 (UC coverage).}
+\label{tab:d3r2}
+\centering\scriptsize
+\begin{tabular}{p{3.8cm}p{3.6cm}p{2.8cm}p{2.0cm}}
+\toprule
+Test & Why we tried it & Expected & What happened \\
+\midrule
+UC06-T07 & UC6: seasonal items add seasonalRewardPoints to e & UC behavior & PASS \\
+UC07-T01 & UC7: customer lists own orders via get orders by  & UC behavior & PASS \\
+UC07-T02 & UC7: customer cannot list another users orders & UC behavior & PASS \\
+UC07-T03 & UC7: get order detail returns status and history & UC behavior & PASS \\
+UC07-T04 & UC7: get order detail returns 404 for unknown id & UC behavior & PASS \\
+UC07-T05 & UC7: combined order shows combineGroupId in detai & UC behavior & PASS \\
+UC08-T01 & UC8: customer cancels own placed order & UC behavior & PASS \\
+UC08-T02 & UC8: restaurant cannot cancel order & UC behavior & PASS \\
+UC08-T03 & UC8: non owner cannot cancel & UC behavior & PASS \\
+UC08-T04 & UC8: cancelled unclaimed order appears in bid lis & UC behavior & PASS \\
+UC14-T01 & UC14: update preferences saves reusable packaging & UC behavior & PASS \\
+UC14-T02 & UC14: rejects invalid packaging preference & UC behavior & PASS \\
+UC14-T03 & UC14: place order persists packaging and ecoReward & UC behavior & PASS \\
+UC09-T01 & UC9: combines nearby orders in same city and zip & UC behavior & PASS \\
+UC09-T02 & UC9: awards 20 eco points to each participant & UC behavior & PASS \\
+UC09-T03 & UC9: returns empty when no neighbors & UC behavior & PASS \\
+UC09-T04 & UC9: rejects when customer has no active order & UC behavior & PASS \\
+UC09-T05 & UC9: does not combine different city or zip & UC behavior & PASS \\
+UC09-T06 & UC9: does not combine ACCEPTED only orders & UC behavior & PASS \\
+UC10-T01 & UC10: lists cancelled unclaimed orders & UC behavior & PASS \\
+UC10-T02 & UC10: customer places pending bid with expiry & UC behavior & PASS \\
+UC10-T03 & UC10: rejects bid on non cancelled order & UC behavior & PASS \\
+UC10-T04 & UC10: rejects bid by original customer & UC behavior & PASS \\
+UC10-T05 & UC10: rejects duplicate pending bid same bidder & UC behavior & PASS \\
+UC10-T06 & UC10: rejects bid from non customer role & UC behavior & PASS \\
+UC10-T07 & UC10: bidder cancels own pending bid & UC behavior & PASS \\
+UC10-T08 & UC10: rejects negative or missing bidAmount & UC behavior & PASS \\
+UC11-T01 & UC11: accepts bid transfers order and rejects othe & UC behavior & PASS \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{D3 results: required tests 57--84 of 102 (UC coverage).}
+\label{tab:d3r3}
+\centering\scriptsize
+\begin{tabular}{p{3.8cm}p{3.6cm}p{2.8cm}p{2.0cm}}
+\toprule
+Test & Why we tried it & Expected & What happened \\
+\midrule
+UC11-T02 & UC11: awards 30 points to original customer & UC behavior & PASS \\
+UC11-T03 & UC11: rejects accept by non owner & UC behavior & PASS \\
+UC11-T04 & UC11: rejects accept of expired bid & UC behavior & PASS \\
+UC11-T05 & UC11: reject single bid leaves order cancelled & UC behavior & PASS \\
+UC11-T06 & UC11: original customer lists bids sorted by amoun & UC behavior & PASS \\
+UC12-T01 & UC12: customer creates review and updates stored a & UC behavior & PASS \\
+UC12-T02 & UC12: rejects rating outside 1 to 5 & UC behavior & PASS \\
+UC12-T03 & UC12: rejects duplicate review same restaurant & UC behavior & PASS \\
+UC12-T04 & UC12: allows review without orderId unverified & UC behavior & PASS \\
+UC12-T05 & UC12: rejects review when orderId not delivered & UC behavior & PASS \\
+UC12-T06 & UC12: customer updates own review & UC behavior & PASS \\
+UC13-T01 & UC13: mark helpful increments count & UC behavior & PASS \\
+UC13-T02 & UC13: second mark toggles off and decrements & UC behavior & PASS \\
+UC13-T03 & UC13: mark helpful returns 404 for missing review & UC behavior & PASS \\
+UC13-T04 & UC13: author can mark own review helpful & UC behavior & PASS \\
+UC18-T01 & UC18: restaurant posts response on own review & UC behavior & PASS \\
+UC18-T02 & UC18: non restaurant cannot respond & UC behavior & PASS \\
+UC18-T03 & UC18: cannot respond to another restaurants review & UC behavior & PASS \\
+UC18-T04 & UC18: empty response is still saved & UC behavior & PASS \\
+UC18-T05 & UC18: second response overwrites first & UC behavior & PASS \\
+UC15-T01 & UC15: adding 100 points mints one five dollar rewa & UC behavior & PASS \\
+UC15-T02 & UC15: mark reward used sets used true & UC behavior & PASS \\
+UC15-T03 & UC15: rejects mark already used reward & UC behavior & PASS \\
+UC15-T04 & UC15: reward redemption does not change order tota & UC behavior & PASS \\
+UC16-T01 & UC16: restaurant creates menu item under own id & UC behavior & PASS \\
+UC16-T02 & UC16: non restaurant cannot create menu item & UC behavior & PASS \\
+UC16-T03 & UC16: restaurant cannot add item to other restaura & UC behavior & PASS \\
+UC16-T04 & UC16: restaurant updates and deletes own menu item & UC behavior & PASS \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{D3 results: required tests 85--102 of 102 (UC coverage).}
+\label{tab:d3r4}
+\centering\scriptsize
+\begin{tabular}{p{3.8cm}p{3.6cm}p{2.8cm}p{2.0cm}}
+\toprule
+Test & Why we tried it & Expected & What happened \\
+\midrule
+UC16-T05 & UC16: create seasonal item with bonus points & UC behavior & PASS \\
+UC16-T06 & UC16: deleted item causes place order to fail & UC behavior & PASS \\
+UC17-T01 & UC17: restaurant lists incoming orders & UC behavior & PASS \\
+UC17-T02 & UC17: restaurant marks order preparing then ready & UC behavior & PASS \\
+UC17-T03 & UC17: restaurant cannot set CANCELLED & UC behavior & PASS \\
+UC17-T04 & UC17: combined order visible to drivers without RE & UC behavior & PASS \\
+UC19-T01 & UC19: driver lists available ready and combined or & UC behavior & PASS \\
+UC19-T02 & UC19: non driver cannot access available list & UC behavior & PASS \\
+UC19-T03 & UC19: driver assigns self to order & UC behavior & PASS \\
+UC19-T04 & UC19: driver cannot assign without driver role & UC behavior & PASS \\
+UC19-T05 & UC19: assigning driver propagates to combine group & UC behavior & PASS \\
+UC19-T06 & UC19: assigned order removed from available list & UC behavior & PASS \\
+UC20-T01 & UC20: driver marks picked up out for delivery deli & UC behavior & PASS \\
+UC20-T02 & UC20: delivery credits customer ecoRewardPoints on & UC behavior & PASS \\
+UC20-T03 & UC20: delivery skips credit when ecoRewardPoints z & UC behavior & PASS \\
+UC20-T04 & UC20: delivery credits driver incentive for EV & UC behavior & PASS \\
+UC20-T05 & UC20: driver default vehicle gets five points & UC behavior & PASS \\
+UC20-T06 & UC20: non driver cannot mark delivery statuses & UC behavior & PASS \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{D3 results: findings tests (expected FAIL = real product gaps).}
+\label{tab:d3f}
+\centering\scriptsize
+\begin{tabular}{p{3.8cm}p{3.6cm}p{2.8cm}p{2.6cm}}
+\toprule
+Test & Why we tried it & Expected & What happened \\
+\midrule
+FIND-UC07 order\_detail\_refuses\_non\_owner\_acces & UC7 order detail refuses non owner access & 403 for non-owner & FAIL --- got 200; getOrderById lacks ownership \\
+FIND-UC08 customer\_cannot\_cancel\_after\_DELIVER & UC8 customer cannot cancel after DELIVERED & cancel refused & FAIL --- got 200; no status guard \\
+FIND-UC06 paymentMethod\_is\_persisted\_on\_create & UC6 paymentMethod is persisted on created or & cash persisted & FAIL --- stored card; createOrder ignores payment \\
+FIND-UC12 review\_response\_stats\_match\_stored\_a & UC12 review response stats match stored avera & stats match stored avg & FAIL --- stats 0; reads restaurantInfo.* \\
+FIND-UC15 combine\_points\_mint\_five\_dollar\_rewa & UC15 combine points mint five dollar reward a & mint \$5 from combine pts & FAIL --- rewardHistory empty; direct +=20 \\
+FIND-UC17 restaurant\_cannot\_mark\_ready\_directl & UC17 restaurant cannot mark ready directly fr & READY from PLACED refused & FAIL --- got 200; no state machine \\
+FIND-UC20 driver\_cannot\_mark\_delivered\_without & UC20 driver cannot mark delivered without pri & DELIVERED w/o pickup refused & FAIL --- got 200; sequence not enforced \\
+FIND-UC15 mark\_reward\_used\_requires\_ownership & UC15 mark reward used requires ownership & 403 for non-owner use & FAIL --- got 200; no ownership check \\
+FIND-UC17 restaurant\_timeout\_auto\_cancels\_sile & UC17 restaurant timeout auto cancels silent o & auto-CANCELLED & FAIL --- still PLACED; no timeout \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\paragraph{Failure explanations (D3).}
+\begin{itemize}
+\item UC7 detail leak: \texttt{getOrderById} has no ownership check.
+\item UC8 late cancel: cancel checks owner only, never status.
+\item UC6 payment: \texttt{createOrder} never persists \texttt{paymentMethod}.
+\item UC12 stats: aggregates written to \texttt{averageRating}; response reads missing \texttt{restaurantInfo.*}.
+\item UC15 combine/\$5: combine does \texttt{rewardPoints += 20}, bypassing mint path.
+\item UC15 reward ownership: \texttt{markRewardUsed} ignores caller vs \texttt{userId}.
+\item UC17/UC20: no status machine (READY from PLACED; DELIVERED without pickup).
+\item UC17 SLA: silent \texttt{PLACED} never auto-cancels.
+\end{itemize}
+
+\section{D4: Traceability and project-test comment}
+\label{sec:d4}
+\textit{Deliverable D4 --- assignment checklist: traceability table (tests $\leftrightarrow$ use cases);
+orphans both ways; comment on the project's own tests (coverage vs blinds).}
+
+\begin{table*}[t]
+\caption{D4 traceability rows 1--30 of 111.}
+\label{tab:d4t1}
+\centering\scriptsize
+\begin{tabular}{p{3.2cm}p{4.0cm}p{5.8cm}}
+\toprule
+Test & Use case (D2) & What it proves \\
+\midrule
+UC01-T01 & UC1: Register for the platform & registers customer returns 201 and sets cookie \\
+UC01-T02 & UC1: Register for the platform & rejects duplicate email \\
+UC01-T03 & UC1: Register for the platform & rejects password shorter than 6 \\
+UC01-T04 & UC1: Register for the platform & rejects missing required fields \\
+UC01-T05 & UC1: Register for the platform & defaults role to customer when omitted \\
+UC01-T06 & UC1: Register for the platform & registers restaurant and driver with role fields \\
+UC02-T01 & UC2: Log in & login valid credentials sets cookie and returns user \\
+UC02-T02 & UC2: Log in & login invalid password returns 401 \\
+UC02-T03 & UC2: Log in & login unknown email returns same invalid credentials \\
+UC02-T04 & UC2: Log in & me returns user when authenticated \\
+UC02-T05 & UC2: Log in & me returns 401 without cookie \\
+UC02-T06 & UC2: Log in & logout clears cookie \\
+UC03-T01 & UC3: Browse restaurants & lists restaurants with count and data array \\
+UC03-T02 & UC3: Browse restaurants & get restaurant by id returns profile \\
+UC03-T03 & UC3: Browse restaurants & get restaurant by id returns 404 for non restaurant \\
+UC03-T04 & UC3: Browse restaurants & list includes restaurant even when isAvailable false \\
+UC04-T01 & UC4: View a restaurant menu & get menu returns available items only \\
+UC04-T02 & UC4: View a restaurant menu & get menu returns empty array when none available \\
+UC04-T03 & UC4: View a restaurant menu & get menu is public without auth \\
+UC05-T01 & UC5: Discover seasonal items & get seasonal all returns only seasonal available items \\
+UC05-T02 & UC5: Discover seasonal items & get seasonal all limits to 20 most recent \\
+UC05-T03 & UC5: Discover seasonal items & seasonal item unavailable excluded from lists \\
+UC06-T01 & UC6: Place order & place order creates order with status PLACED \\
+UC06-T02 & UC6: Place order & rejects empty items \\
+UC06-T03 & UC6: Place order & rejects invalid menu item ids \\
+UC06-T04 & UC6: Place order & rejects mixed restaurant items \\
+UC06-T05 & UC6: Place order & rejects non customer creating order \\
+UC06-T06 & UC6: Place order & unknown packaging defaults to standard with zero points \\
+UC06-T07 & UC6: Place order & seasonal items add seasonalRewardPoints to ecoRewardPoints \\
+UC07-T01 & UC7: Track delivery & customer lists own orders via get orders by role \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{D4 traceability rows 31--60 of 111.}
+\label{tab:d4t2}
+\centering\scriptsize
+\begin{tabular}{p{3.2cm}p{4.0cm}p{5.8cm}}
+\toprule
+Test & Use case (D2) & What it proves \\
+\midrule
+UC07-T02 & UC7: Track delivery & customer cannot list another users orders \\
+UC07-T03 & UC7: Track delivery & get order detail returns status and history \\
+UC07-T04 & UC7: Track delivery & get order detail returns 404 for unknown id \\
+UC07-T05 & UC7: Track delivery & combined order shows combineGroupId in detail \\
+UC08-T01 & UC8: Cancel an order & customer cancels own placed order \\
+UC08-T02 & UC8: Cancel an order & restaurant cannot cancel order \\
+UC08-T03 & UC8: Cancel an order & non owner cannot cancel \\
+UC08-T04 & UC8: Cancel an order & cancelled unclaimed order appears in bid list \\
+UC14-T01 & UC14: Choose sustainable packaging & update preferences saves reusable packaging \\
+UC14-T02 & UC14: Choose sustainable packaging & rejects invalid packaging preference \\
+UC14-T03 & UC14: Choose sustainable packaging & place order persists packaging and ecoRewardPoints \\
+UC09-T01 & UC9: Combine orders with neighbors & combines nearby orders in same city and zip \\
+UC09-T02 & UC9: Combine orders with neighbors & awards 20 eco points to each participant \\
+UC09-T03 & UC9: Combine orders with neighbors & returns empty when no neighbors \\
+UC09-T04 & UC9: Combine orders with neighbors & rejects when customer has no active order \\
+UC09-T05 & UC9: Combine orders with neighbors & does not combine different city or zip \\
+UC09-T06 & UC9: Combine orders with neighbors & does not combine ACCEPTED only orders \\
+UC10-T01 & UC10: Bid on a cancelled order & lists cancelled unclaimed orders \\
+UC10-T02 & UC10: Bid on a cancelled order & customer places pending bid with expiry \\
+UC10-T03 & UC10: Bid on a cancelled order & rejects bid on non cancelled order \\
+UC10-T04 & UC10: Bid on a cancelled order & rejects bid by original customer \\
+UC10-T05 & UC10: Bid on a cancelled order & rejects duplicate pending bid same bidder \\
+UC10-T06 & UC10: Bid on a cancelled order & rejects bid from non customer role \\
+UC10-T07 & UC10: Bid on a cancelled order & bidder cancels own pending bid \\
+UC10-T08 & UC10: Bid on a cancelled order & rejects negative or missing bidAmount \\
+UC11-T01 & UC11: Accept a bid & accepts bid transfers order and rejects others \\
+UC11-T02 & UC11: Accept a bid & awards 30 points to original customer \\
+UC11-T03 & UC11: Accept a bid & rejects accept by non owner \\
+UC11-T04 & UC11: Accept a bid & rejects accept of expired bid \\
+UC11-T05 & UC11: Accept a bid & reject single bid leaves order cancelled \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{D4 traceability rows 61--90 of 111.}
+\label{tab:d4t3}
+\centering\scriptsize
+\begin{tabular}{p{3.2cm}p{4.0cm}p{5.8cm}}
+\toprule
+Test & Use case (D2) & What it proves \\
+\midrule
+UC11-T06 & UC11: Accept a bid & original customer lists bids sorted by amount \\
+UC12-T01 & UC12: Rate the restaurant & customer creates review and updates stored averageRating \\
+UC12-T02 & UC12: Rate the restaurant & rejects rating outside 1 to 5 \\
+UC12-T03 & UC12: Rate the restaurant & rejects duplicate review same restaurant \\
+UC12-T04 & UC12: Rate the restaurant & allows review without orderId unverified \\
+UC12-T05 & UC12: Rate the restaurant & rejects review when orderId not delivered \\
+UC12-T06 & UC12: Rate the restaurant & customer updates own review \\
+UC13-T01 & UC13: Mark a review helpful & mark helpful increments count \\
+UC13-T02 & UC13: Mark a review helpful & second mark toggles off and decrements \\
+UC13-T03 & UC13: Mark a review helpful & mark helpful returns 404 for missing review \\
+UC13-T04 & UC13: Mark a review helpful & author can mark own review helpful \\
+UC18-T01 & UC18: Respond to a review & restaurant posts response on own review \\
+UC18-T02 & UC18: Respond to a review & non restaurant cannot respond \\
+UC18-T03 & UC18: Respond to a review & cannot respond to another restaurants review \\
+UC18-T04 & UC18: Respond to a review & empty response is still saved \\
+UC18-T05 & UC18: Respond to a review & second response overwrites first \\
+UC15-T01 & UC15: Redeem eco-rewards & adding 100 points mints one five dollar reward \\
+UC15-T02 & UC15: Redeem eco-rewards & mark reward used sets used true \\
+UC15-T03 & UC15: Redeem eco-rewards & rejects mark already used reward \\
+UC15-T04 & UC15: Redeem eco-rewards & reward redemption does not change order total on server \\
+UC16-T01 & UC16: Manage the menu & restaurant creates menu item under own id \\
+UC16-T02 & UC16: Manage the menu & non restaurant cannot create menu item \\
+UC16-T03 & UC16: Manage the menu & restaurant cannot add item to other restaurant \\
+UC16-T04 & UC16: Manage the menu & restaurant updates and deletes own menu item \\
+UC16-T05 & UC16: Manage the menu & create seasonal item with bonus points \\
+UC16-T06 & UC16: Manage the menu & deleted item causes place order to fail \\
+UC17-T01 & UC17: Fulfill order & restaurant lists incoming orders \\
+UC17-T02 & UC17: Fulfill order & restaurant marks order preparing then ready \\
+UC17-T03 & UC17: Fulfill order & restaurant cannot set CANCELLED \\
+UC17-T04 & UC17: Fulfill order & combined order visible to drivers without READY status \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{D4 traceability rows 91--111 of 111.}
+\label{tab:d4t4}
+\centering\scriptsize
+\begin{tabular}{p{3.2cm}p{4.0cm}p{5.8cm}}
+\toprule
+Test & Use case (D2) & What it proves \\
+\midrule
+UC19-T01 & UC19: Accept a delivery job & driver lists available ready and combined orders \\
+UC19-T02 & UC19: Accept a delivery job & non driver cannot access available list \\
+UC19-T03 & UC19: Accept a delivery job & driver assigns self to order \\
+UC19-T04 & UC19: Accept a delivery job & driver cannot assign without driver role \\
+UC19-T05 & UC19: Accept a delivery job & assigning driver propagates to combine group \\
+UC19-T06 & UC19: Accept a delivery job & assigned order removed from available list \\
+UC20-T01 & UC20: Deliver order & driver marks picked up out for delivery delivered \\
+UC20-T02 & UC20: Deliver order & delivery credits customer ecoRewardPoints once \\
+UC20-T03 & UC20: Deliver order & delivery skips credit when ecoRewardPoints zero \\
+UC20-T04 & UC20: Deliver order & delivery credits driver incentive for EV \\
+UC20-T05 & UC20: Deliver order & driver default vehicle gets five points \\
+UC20-T06 & UC20: Deliver order & non driver cannot mark delivery statuses \\
+FIND-UC07 & UC7: Track delivery & order detail refuses non owner access \\
+FIND-UC08 & UC8: Cancel an order & customer cannot cancel after DELIVERED \\
+FIND-UC06 & UC6: Place order & paymentMethod is persisted on created order \\
+FIND-UC12 & UC12: Rate the restaurant & review response stats match stored averageRating \\
+FIND-UC15 & UC15: Redeem eco-rewards & combine points mint five dollar reward at 100 \\
+FIND-UC17 & UC17: Fulfill order & restaurant cannot mark ready directly from PLACED \\
+FIND-UC20 & UC20: Deliver order & driver cannot mark delivered without prior pickup \\
+FIND-UC15 & UC15: Redeem eco-rewards & mark reward used requires ownership \\
+FIND-UC17 & UC17: Fulfill order & restaurant timeout auto cancels silent order \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\paragraph{Orphans (D4, both directions).}
+Use cases with no student test: \textbf{none} (UC1--UC20 all present).
+Tests with no use case: \textbf{none}.
+
+\paragraph{Project's own tests (D4 step 7 --- after our suite).}
+Legacy only; \emph{not} counted as D3.
+Server \texttt{tests/integration/} ($\approx$23) and client Vitest mocks ($\approx$154).
+
+\textbf{Cover:} combine-orders heavily; partial order CRUD; register/duplicate email;
+driver happy path; some restaurant/driver UI.
+
+\textbf{Blind vs our UCs:} UC2 login/\texttt{me}/logout; UC3 restaurant list API;
+UC5 seasonal API; UC8 cancel rules; UC10--UC11 bidding (zero server tests);
+UC12--UC13/UC18 reviews on server; UC14 preferences; UC15 reward ownership;
+payment persistence; restaurant timeout; status-machine; order-detail authz.
+Their green suite protects written combine/status code, not the D2 extensions our findings fail on.
