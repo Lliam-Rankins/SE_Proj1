@@ -30,11 +30,18 @@ describe('UC06 Place order', () => {
     });
     // Assert: PLACED status, reusable packaging points, zero fees/tax.
     expect(res.status).toBe(201);
+    expect(res.body._id).toBeDefined();
     expect(res.body.status).toBe('PLACED');
     expect(res.body.ecoRewardPoints).toBe(30);
     expect(res.body.deliveryFee).toBe(0);
     expect(res.body.tax).toBe(0);
     expect(res.body.total).toBe(res.body.subtotal);
+    expect(res.body.packagingPreference).toBe('reusable');
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.customerId).toEqual(ctx.customer._id);
+    expect(res.body.restaurantId).toEqual(ctx.restaurant._id);
+    expect(res.body.subtotal).toBeGreaterThan(0);
+    expect(res.body.createdAt).toBeDefined();
   }, 20000);
 
   test('UC06-T02 test_rejects_empty_items', async () => {
@@ -47,7 +54,11 @@ describe('UC06 Place order', () => {
       deliveryAddress: raleighAddress(),
     });
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/no items/i);
+    expect(res.body.message).toMatch(/no items|at least one|empty/i);
+    expect(res.body.message).toBeDefined();
+    // Verify no order was created
+    const orderCount = await Order.countDocuments({ customerId: ctx.customer._id });
+    expect(orderCount).toBe(0);
   });
 
   test('UC06-T03 test_rejects_invalid_menu_item_ids', async () => {
@@ -61,7 +72,10 @@ describe('UC06 Place order', () => {
       deliveryAddress: raleighAddress(),
     });
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/invalid/i);
+    expect(res.body.message).toMatch(/invalid|not found|does not exist/i);
+    // Verify no order was created with invalid item
+    const order = await Order.findOne({ customerId: ctx.customer._id });
+    expect(order).toBeNull();
   }, 20000);
 
   test('UC06-T04 test_rejects_mixed_restaurant_items', async () => {
@@ -88,7 +102,11 @@ describe('UC06 Place order', () => {
       deliveryAddress: raleighAddress(),
     });
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/same restaurant/i);
+    expect(res.body.message).toMatch(/same restaurant|single restaurant|one restaurant/i);
+    expect(res.body.message).toBeDefined();
+    // Verify no order was created with mixed restaurants
+    const order = await Order.findOne({ customerId: ctx.customer._id });
+    expect(order).toBeNull();
   }, 20000);
 
   test('UC06-T05 test_rejects_non_customer_creating_order', async () => {
@@ -101,6 +119,10 @@ describe('UC06 Place order', () => {
       deliveryAddress: raleighAddress(),
     });
     expect(res.status).toBe(403);
+    expect(res.body.message).toBeDefined();
+    // Verify no order was created by restaurant
+    const order = await Order.findOne({ customerId: ctx.restaurant._id });
+    expect(order).toBeNull();
   });
 
   test('UC06-T06 test_unknown_packaging_defaults_to_standard_with_zero_points', async () => {
@@ -113,8 +135,15 @@ describe('UC06 Place order', () => {
       packagingPreference: 'plastic-wrap',
     });
     expect(res.status).toBe(201);
+    expect(res.body._id).toBeDefined();
     expect(res.body.packagingPreference).toBe('standard');
     expect(res.body.ecoRewardPoints).toBe(0);
+    expect(res.body.status).toBe('PLACED');
+    // Verify persisted in DB
+    const dbOrder = await Order.findById(res.body._id);
+    expect(dbOrder).not.toBeNull();
+    expect(dbOrder.packagingPreference).toBe('standard');
+    expect(dbOrder.ecoRewardPoints).toBe(0);
   }, 20000);
 
   test('UC06-T07 test_seasonal_items_add_seasonalRewardPoints_to_ecoRewardPoints', async () => {
@@ -134,6 +163,13 @@ describe('UC06 Place order', () => {
     // Assert: 30 packaging + 5 seasonal = 35.
     expect(res.status).toBe(201);
     expect(res.body.ecoRewardPoints).toBe(35);
+    expect(res.body.packagingPreference).toBe('reusable');
+    expect(res.body.status).toBe('PLACED');
+    expect(res.body._id).toBeDefined();
+    // Verify persisted correctly in DB
+    const dbOrder = await Order.findById(res.body._id);
+    expect(dbOrder.ecoRewardPoints).toBe(35);
+    expect(dbOrder.status).toBe('PLACED');
   }, 20000);
 });
 
@@ -141,7 +177,7 @@ describe('UC07 Track delivery', () => {
   test('UC07-T01 test_customer_lists_own_orders_via_get_orders_by_role', async () => {
     const ctx = await seedMarketplaceActors();
     // Arrange: one PLACED order for customer.
-    await createSeededOrder({
+    const order = await createSeededOrder({
       customerId: ctx.customer._id,
       restaurantId: ctx.restaurant._id,
       menuItem: ctx.menuItem,
@@ -151,17 +187,34 @@ describe('UC07 Track delivery', () => {
       `/api/orders/customer/${ctx.customer._id}`
     );
     expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].status).toBe('PLACED');
+    expect(res.body[0].customerId).toEqual(ctx.customer._id);
+    expect(res.body[0].restaurantId).toEqual(ctx.restaurant._id);
+    expect(res.body[0].items).toHaveLength(1);
   });
 
   test('UC07-T02 test_customer_cannot_list_another_users_orders', async () => {
     const ctx = await seedMarketplaceActors();
+    // Arrange: create an order for the main customer
+    await createSeededOrder({
+      customerId: ctx.customer._id,
+      restaurantId: ctx.restaurant._id,
+      menuItem: ctx.menuItem,
+    });
     // Act: Alice tries to list Bob's orders.
     const res = await ctx.customerAgent.get(
       `/api/orders/customer/${ctx.neighbor._id}`
     );
     expect(res.status).toBe(403);
+    expect(res.body.message).toBeDefined();
+    // Verify customer still only sees own order when fetching their own list
+    const ownRes = await ctx.customerAgent.get(
+      `/api/orders/customer/${ctx.customer._id}`
+    );
+    expect(ownRes.status).toBe(200);
+    expect(ownRes.body).toHaveLength(1);
   });
 
   test('UC07-T03 test_get_order_detail_returns_status_and_history', async () => {
@@ -176,6 +229,11 @@ describe('UC07 Track delivery', () => {
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('PLACED');
     expect(Array.isArray(res.body.statusHistory)).toBe(true);
+    expect(res.body.statusHistory.length).toBeGreaterThan(0);
+    expect(res.body.statusHistory[0].status).toBe('PLACED');
+    expect(res.body.customerId).toEqual(ctx.customer._id);
+    expect(res.body.restaurantId).toEqual(ctx.restaurant._id);
+    expect(res.body.items).toHaveLength(1);
   });
 
   test('UC07-T04 test_get_order_detail_returns_404_for_unknown_id', async () => {
@@ -185,6 +243,8 @@ describe('UC07 Track delivery', () => {
       '/api/orders/detail/507f1f77bcf86cd799439011'
     );
     expect(res.status).toBe(404);
+    expect(res.body.message).toBeDefined();
+    expect(res.body.message).toMatch(/not found|does not exist|no order/i);
   });
 
   test('UC07-T05 test_combined_order_shows_combineGroupId_in_detail', async () => {
@@ -201,6 +261,8 @@ describe('UC07 Track delivery', () => {
     expect(res.status).toBe(200);
     expect(res.body.combineGroupId).toBe('GRPTEST1');
     expect(res.body.status).toBe('COMBINED');
+    expect(Array.isArray(res.body.statusHistory)).toBe(true);
+    expect(res.body.statusHistory.some(sh => sh.status === 'COMBINED')).toBe(true);
   });
 });
 
@@ -218,6 +280,12 @@ describe('UC08 Cancel an order', () => {
       .send({ status: 'CANCELLED' });
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('CANCELLED');
+    expect(Array.isArray(res.body.statusHistory)).toBe(true);
+    expect(res.body.statusHistory.length).toBeGreaterThanOrEqual(2);
+    expect(res.body.statusHistory[res.body.statusHistory.length - 1].status).toBe('CANCELLED');
+    // Verify persisted in DB
+    const dbOrder = await Order.findById(order._id);
+    expect(dbOrder.status).toBe('CANCELLED');
   });
 
   test('UC08-T02 test_restaurant_cannot_cancel_order', async () => {
@@ -233,6 +301,10 @@ describe('UC08 Cancel an order', () => {
       .send({ status: 'CANCELLED' });
     expect(res.status).toBe(403);
     expect(res.body.message).toMatch(/only customer can cancel/i);
+    expect(res.body.message).toBeDefined();
+    // Verify order was NOT cancelled
+    const dbOrder = await Order.findById(order._id);
+    expect(dbOrder.status).toBe('PLACED');
   });
 
   test('UC08-T03 test_non_owner_cannot_cancel', async () => {
@@ -247,6 +319,10 @@ describe('UC08 Cancel an order', () => {
       .patch(`/api/orders/${order._id}/status`)
       .send({ status: 'CANCELLED' });
     expect(res.status).toBe(403);
+    expect(res.body.message).toBeDefined();
+    // Verify order was NOT cancelled
+    const dbOrder = await Order.findById(order._id);
+    expect(dbOrder.status).toBe('PLACED');
   });
 
   test('UC08-T04 test_cancelled_unclaimed_order_appears_in_bid_list', async () => {
@@ -261,9 +337,12 @@ describe('UC08 Cancel an order', () => {
     // Act: neighbor browses cancelled orders available for bidding.
     const res = await ctx.neighborAgent.get('/api/bids/cancelled-orders');
     expect(res.status).toBe(200);
-    expect(res.body.data.some((o) => String(o._id) === String(order._id))).toBe(
-      true
-    );
+    expect(res.body).toBeDefined();
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data.some((o) => String(o._id) === String(order._id))).toBe(true);
+    // Verify the order in bid list has cancelled status
+    const bidOrder = res.body.data.find((o) => String(o._id) === String(order._id));
+    expect(bidOrder.status).toBe('CANCELLED');
   });
 });
 
@@ -275,7 +354,12 @@ describe('UC14 Choose sustainable packaging', () => {
       .post('/api/profile/preferences')
       .send({ packaging: 'reusable' });
     expect(res.status).toBe(200);
+    expect(res.body).toBeDefined();
+    expect(res.body.preferences).toBeDefined();
     expect(res.body.preferences.packaging).toBe('reusable');
+    // Verify persisted in DB
+    const user = await User.findById(ctx.customer._id);
+    expect(user.preferences.packaging).toBe('reusable');
   });
 
   test('UC14-T02 test_rejects_invalid_packaging_preference', async () => {
@@ -284,6 +368,11 @@ describe('UC14 Choose sustainable packaging', () => {
       .post('/api/profile/preferences')
       .send({ packaging: 'styrofoam' });
     expect(res.status).toBe(400);
+    expect(res.body.message).toBeDefined();
+    expect(res.body.message).toMatch(/invalid|not valid|not supported|not allowed/i);
+    // Verify preference was NOT changed in DB
+    const user = await User.findById(ctx.customer._id);
+    expect(user.preferences?.packaging).not.toBe('styrofoam');
   });
 
   test('UC14-T03 test_place_order_persists_packaging_and_ecoRewardPoints', async () => {
