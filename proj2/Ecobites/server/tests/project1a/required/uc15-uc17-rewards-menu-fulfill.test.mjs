@@ -24,9 +24,9 @@ describe('UC15 Redeem eco-rewards', () => {
     expect(res.status).toBe(200);
     expect(res.body.rewardsIssued).toBe(1);
     expect(res.body.rewardPoints).toBe(0);
-    expect(res.body.rewards.some((r) => r.amount === 5 && r.used === false)).toBe(
-      true
-    );
+    expect(res.body.rewards).toHaveLength(1);
+    expect(res.body.rewards[0].amount).toBe(5);
+    expect(res.body.rewards[0].used).toBe(false);
   });
 
   test('UC15-T02 test_mark_reward_used_sets_used_true', async () => {
@@ -238,6 +238,8 @@ describe('UC17 Fulfill order', () => {
     // Act: driver polls available jobs — COMBINED should appear.
     const res = await ctx.driverAgent.get('/api/orders/available/drivers');
     expect(res.status).toBe(200);
-    expect(res.body.some((o) => o.status === 'COMBINED')).toBe(true);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].status).toBe('COMBINED');
+    expect(res.body[0].combineGroupId).toBe('GRPABC');
   });
 });

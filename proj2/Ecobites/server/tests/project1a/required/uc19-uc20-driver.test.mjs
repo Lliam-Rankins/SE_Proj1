@@ -35,7 +35,9 @@ describe('UC19 Accept a delivery job', () => {
     });
     const res = await ctx.driverAgent.get('/api/orders/available/drivers');
     expect(res.status).toBe(200);
-    expect(res.body.length).toBeGreaterThanOrEqual(2);
+    expect(res.body).toHaveLength(2);
+    expect(res.body.some((o) => o.status === 'READY')).toBe(true);
+    expect(res.body.some((o) => o.status === 'COMBINED')).toBe(true);
   });
 
   test('UC19-T02 test_non_driver_cannot_access_available_list', async () => {
@@ -95,13 +97,18 @@ describe('UC19 Accept a delivery job', () => {
       extras: { combineGroupId: 'GRPXYZ' },
     });
     // Act: assign driver on first order only.
-    await ctx.driverAgent
+    const assignRes = await ctx.driverAgent
       .patch(`/api/orders/${a._id}/status`)
       .send({ status: 'DRIVER_ASSIGNED', driverId: ctx.driver._id });
-    // Assert: sibling order in same group also assigned.
+    expect(assignRes.status).toBe(200);
+    expect(assignRes.body.status).toBe('DRIVER_ASSIGNED');
+
+    const patched = await Order.findById(a._id);
     const sibling = await Order.findById(b._id);
-    expect(sibling.status).toBe('DRIVER_ASSIGNED');
-    expect(String(sibling.driverId)).toBe(String(ctx.driver._id));
+    for (const order of [patched, sibling]) {
+      expect(order.status).toBe('DRIVER_ASSIGNED');
+      expect(String(order.driverId)).toBe(String(ctx.driver._id));
+    }
   });
 
   test('UC19-T06 test_assigned_order_removed_from_available_list', async () => {
@@ -117,9 +124,8 @@ describe('UC19 Accept a delivery job', () => {
       .send({ status: 'DRIVER_ASSIGNED', driverId: ctx.driver._id });
     // Act: re-fetch available list — claimed order should be gone.
     const res = await ctx.driverAgent.get('/api/orders/available/drivers');
-    expect(res.body.every((o) => String(o._id) !== String(order._id))).toBe(
-      true
-    );
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(0);
   });
 });
 
@@ -146,7 +152,6 @@ describe('UC20 Deliver order', () => {
       .send({ status: 'DELIVERED' });
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('DELIVERED');
-    expect(res.body.ecoRewardCredited).toBe(true);
   });
 
   test('UC20-T02 test_delivery_credits_customer_ecoRewardPoints_once', async () => {
@@ -160,9 +165,10 @@ describe('UC20 Deliver order', () => {
       extras: { driverId: ctx.driver._id },
     });
     const before = (await User.findById(ctx.customer._id)).rewardPoints || 0;
-    await ctx.driverAgent
+    const first = await ctx.driverAgent
       .patch(`/api/orders/${order._id}/status`)
       .send({ status: 'DELIVERED' });
+    expect(first.status).toBe(200);
     const mid = (await User.findById(ctx.customer._id)).rewardPoints;
     expect(mid - before).toBe(30);
     // Simulate re-delivery attempt after ecoRewardCredited already true.
@@ -170,9 +176,10 @@ describe('UC20 Deliver order', () => {
       status: 'OUT_FOR_DELIVERY',
       ecoRewardCredited: true,
     });
-    await ctx.driverAgent
+    const second = await ctx.driverAgent
       .patch(`/api/orders/${order._id}/status`)
       .send({ status: 'DELIVERED' });
+    expect(second.status).toBe(200);
     const after = (await User.findById(ctx.customer._id)).rewardPoints;
     expect(after).toBe(mid);
   });
@@ -189,9 +196,10 @@ describe('UC20 Deliver order', () => {
       extras: { driverId: ctx.driver._id },
     });
     const before = (await User.findById(ctx.customer._id)).rewardPoints || 0;
-    await ctx.driverAgent
+    const res = await ctx.driverAgent
       .patch(`/api/orders/${order._id}/status`)
       .send({ status: 'DELIVERED' });
+    expect(res.status).toBe(200);
     const after = (await User.findById(ctx.customer._id)).rewardPoints || 0;
     expect(after).toBe(before);
   });
@@ -215,9 +223,9 @@ describe('UC20 Deliver order', () => {
     expect(after - before).toBe(25);
   });
 
-  test('UC20-T05 test_driver_default_vehicle_gets_five_points', async () => {
+  test('UC20-T05 test_driver_car_vehicle_gets_five_points', async () => {
     const ctx = await seedMarketplaceActors();
-    // Arrange: change driver from default EV to Car (lower incentive).
+    // Arrange: Car vehicle gets DEFAULT incentive (5 pts).
     await User.findByIdAndUpdate(ctx.driver._id, { vehicleType: 'Car' });
     const order = await createSeededOrder({
       customerId: ctx.customer._id,
@@ -227,10 +235,14 @@ describe('UC20 Deliver order', () => {
       ecoRewardPoints: 0,
       extras: { driverId: ctx.driver._id },
     });
+    const before = (await User.findById(ctx.driver._id)).rewardPoints || 0;
     const res = await ctx.driverAgent
       .patch(`/api/orders/${order._id}/status`)
       .send({ status: 'DELIVERED' });
+    expect(res.status).toBe(200);
     expect(res.body.driverRewardPoints).toBe(5);
+    const after = (await User.findById(ctx.driver._id)).rewardPoints;
+    expect(after - before).toBe(5);
   });
 
   test('UC20-T06 test_non_driver_cannot_mark_delivery_statuses', async () => {

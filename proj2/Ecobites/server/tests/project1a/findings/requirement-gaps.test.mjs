@@ -62,8 +62,8 @@ describe('Project 1a requirement findings (expected FAIL)', () => {
     expect(res.body.paymentMethod).toBe('cash');
   }, 20000);
 
-  test('FIND-UC12 test_review_response_stats_match_stored_averageRating', async () => {
-    // UC12 ext 3d: response stats should match stored aggregates.
+  test('FIND-UC12 test_createReview_stats_match_stored_averageRating', async () => {
+    // UC12 ext 3d: createReview response stats should match stored aggregates.
     // Controller reads restaurantInfo.* which does not exist on User.
     const ctx = await seedMarketplaceActors();
     const res = await ctx.customerAgent.post('/api/reviews').send({
@@ -74,8 +74,82 @@ describe('Project 1a requirement findings (expected FAIL)', () => {
     expect(res.status).toBe(201);
     const stored = await User.findById(ctx.restaurant._id);
     expect(stored.averageRating).toBe(5);
+    expect(stored.totalReviews).toBe(1);
     // Finding: API stats object does not mirror DB aggregate.
     expect(res.body.stats.averageRating).toBe(5);
+    expect(res.body.stats.totalReviews).toBe(1);
+  });
+
+  test('FIND-UC12 test_getReviewsByRestaurant_stats_match_stored_averageRating', async () => {
+    // UC12 ext 3d: list-by-restaurant stats should match stored aggregates.
+    const ctx = await seedMarketplaceActors();
+    await ctx.customerAgent.post('/api/reviews').send({
+      restaurantId: ctx.restaurant._id,
+      rating: 5,
+      comment: 'Excellent',
+    });
+    const res = await ctx.customerAgent.get(
+      `/api/reviews/restaurant/${ctx.restaurant._id}`
+    );
+    expect(res.status).toBe(200);
+    const stored = await User.findById(ctx.restaurant._id);
+    expect(stored.averageRating).toBe(5);
+    expect(stored.totalReviews).toBe(1);
+    expect(res.body.stats.averageRating).toBe(5);
+    expect(res.body.stats.totalReviews).toBe(1);
+  });
+
+  test('FIND-UC12 test_updateReview_stats_match_stored_averageRating', async () => {
+    // UC12 ext 3d: updateReview response stats should match stored aggregates.
+    const ctx = await seedMarketplaceActors();
+    const created = await ctx.customerAgent.post('/api/reviews').send({
+      restaurantId: ctx.restaurant._id,
+      rating: 3,
+    });
+    const res = await ctx.customerAgent
+      .put(`/api/reviews/${created.body.review._id}`)
+      .send({ rating: 5, comment: 'Updated' });
+    expect(res.status).toBe(200);
+    const stored = await User.findById(ctx.restaurant._id);
+    expect(stored.averageRating).toBe(5);
+    expect(stored.totalReviews).toBe(1);
+    expect(res.body.stats.averageRating).toBe(5);
+    expect(res.body.stats.totalReviews).toBe(1);
+  });
+
+  test('FIND-UC12 test_deleteReview_stats_match_stored_averageRating', async () => {
+    // UC12 ext 3d: deleteReview response stats should match stored aggregates.
+    const ctx = await seedMarketplaceActors();
+    const created = await ctx.customerAgent.post('/api/reviews').send({
+      restaurantId: ctx.restaurant._id,
+      rating: 5,
+    });
+    await ctx.neighborAgent.post('/api/reviews').send({
+      restaurantId: ctx.restaurant._id,
+      rating: 3,
+    });
+    const res = await ctx.customerAgent.delete(
+      `/api/reviews/${created.body.review._id}`
+    );
+    expect(res.status).toBe(200);
+    const stored = await User.findById(ctx.restaurant._id);
+    expect(stored.averageRating).toBe(3);
+    expect(stored.totalReviews).toBe(1);
+    expect(res.body.stats.averageRating).toBe(3);
+    expect(res.body.stats.totalReviews).toBe(1);
+  });
+
+  test('FIND-UC12 test_getMyReviews_populates_restaurant_cuisine', async () => {
+    // getMyReviews populate uses restaurantInfo.cuisine; User stores cuisine at top level.
+    const ctx = await seedMarketplaceActors();
+    await ctx.customerAgent.post('/api/reviews').send({
+      restaurantId: ctx.restaurant._id,
+      rating: 4,
+    });
+    const res = await ctx.customerAgent.get('/api/reviews/my-reviews');
+    expect(res.status).toBe(200);
+    expect(res.body.reviews).toHaveLength(1);
+    expect(res.body.reviews[0].restaurantId.cuisine).toEqual(['Vegan']);
   });
 
   test('FIND-UC15 test_combine_points_mint_five_dollar_reward_at_100', async () => {
