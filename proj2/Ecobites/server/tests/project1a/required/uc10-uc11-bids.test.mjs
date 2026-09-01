@@ -38,9 +38,9 @@ describe('UC10 Bid on a cancelled order', () => {
     const res = await ctx.neighborAgent.get('/api/bids/cancelled-orders');
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.some((o) => String(o._id) === String(order._id))).toBe(
-      true
-    );
+    expect(res.body.data).toHaveLength(1);
+    expect(String(res.body.data[0]._id)).toBe(String(order._id));
+    expect(res.body.data[0].status).toBe('CANCELLED');
   });
 
   test('UC10-T02 test_customer_places_pending_bid_with_expiry', async () => {
@@ -182,9 +182,11 @@ describe('UC11 Accept a bid', () => {
     const bid1 = await ctx.neighborAgent
       .post('/api/bids')
       .send({ ...placeBidPayload(order._id), bidAmount: 10 });
+    expect(bid1.status).toBe(201);
     const bid2 = await thirdAgent
       .post('/api/bids')
       .send({ ...placeBidPayload(order._id), bidAmount: 9 });
+    expect(bid2.status).toBe(201);
 
     // Act: original customer accepts higher bid.
     const res = await ctx.customerAgent
@@ -199,6 +201,8 @@ describe('UC11 Accept a bid', () => {
     expect(updated.total).toBe(10);
     expect(String(updated.claimedBy)).toBe(String(ctx.neighbor._id));
 
+    const winningBid = await Bid.findById(bid1.body.data._id);
+    expect(winningBid.status).toBe('ACCEPTED');
     const other = await Bid.findById(bid2.body.data._id);
     expect(other.status).toBe('REJECTED');
   });
@@ -214,10 +218,12 @@ describe('UC11 Accept a bid', () => {
     const bid = await ctx.neighborAgent
       .post('/api/bids')
       .send(placeBidPayload(order._id));
+    expect(bid.status).toBe(201);
     const before = (await User.findById(ctx.customer._id)).rewardPoints || 0;
-    await ctx.customerAgent
+    const res = await ctx.customerAgent
       .post(`/api/bids/${bid.body.data._id}/accept`)
       .send({});
+    expect(res.status).toBe(200);
     const after = (await User.findById(ctx.customer._id)).rewardPoints;
     expect(after - before).toBe(30);
   });
@@ -295,19 +301,23 @@ describe('UC11 Accept a bid', () => {
       menuItem: ctx.menuItem,
       status: 'CANCELLED',
     });
-    await ctx.neighborAgent
+    const firstBid = await ctx.neighborAgent
       .post('/api/bids')
       .send({ ...placeBidPayload(order._id), bidAmount: 6 });
+    expect(firstBid.status).toBe(201);
+
     const third = newAgent();
     await registerCustomer(third, { email: `third.${Date.now()}@p1a.test` });
-    await third
+    const secondBid = await third
       .post('/api/bids')
       .send({ ...placeBidPayload(order._id), bidAmount: 11 });
+    expect(secondBid.status).toBe(201);
+
     // Act: owner lists bids for order — highest amount first.
     const res = await ctx.customerAgent.get(`/api/bids/order/${order._id}`);
     expect(res.status).toBe(200);
-    expect(res.body.data[0].bidAmount).toBeGreaterThanOrEqual(
-      res.body.data[1].bidAmount
-    );
+    expect(res.body.data).toHaveLength(2);
+    expect(res.body.data[0].bidAmount).toBe(11);
+    expect(res.body.data[1].bidAmount).toBe(6);
   });
 });
