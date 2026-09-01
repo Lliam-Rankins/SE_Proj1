@@ -88,12 +88,19 @@ describe('UC12 Rate the restaurant', () => {
       restaurantId: ctx.restaurant._id,
       rating: 3,
     });
+    expect(created.status).toBe(201);
+
     // Act: PUT updated rating and comment.
     const res = await ctx.customerAgent
       .put(`/api/reviews/${created.body.review._id}`)
       .send({ rating: 5, comment: 'Updated' });
     expect(res.status).toBe(200);
     expect(res.body.review.rating).toBe(5);
+    expect(res.body.review.comment).toBe('Updated');
+
+    const updated = await Review.findById(created.body.review._id);
+    expect(updated.rating).toBe(5);
+    expect(updated.comment).toBe('Updated');
   });
 });
 
@@ -104,12 +111,18 @@ describe('UC13 Mark a review helpful', () => {
       restaurantId: ctx.restaurant._id,
       rating: 5,
     });
+    expect(created.status).toBe(201);
+
     // Act: neighbor marks review helpful.
     const res = await ctx.neighborAgent.post(
       `/api/reviews/${created.body.review._id}/helpful`
     );
     expect(res.status).toBe(200);
-    expect(res.body.helpfulCount ?? res.body.review?.helpfulCount).toBeTruthy();
+    const count = res.body.helpfulCount ?? res.body.review?.helpfulCount;
+    expect(count).toBe(1);
+
+    const review = await Review.findById(created.body.review._id);
+    expect(review.helpfulCount).toBe(1);
   });
 
   test('UC13-T02 test_second_mark_toggles_off_and_decrements', async () => {
@@ -118,8 +131,12 @@ describe('UC13 Mark a review helpful', () => {
       restaurantId: ctx.restaurant._id,
       rating: 4,
     });
+    expect(created.status).toBe(201);
     const id = created.body.review._id;
-    await ctx.neighborAgent.post(`/api/reviews/${id}/helpful`);
+
+    const first = await ctx.neighborAgent.post(`/api/reviews/${id}/helpful`);
+    expect(first.status).toBe(200);
+
     // Act: second click toggles helpful off.
     const res = await ctx.neighborAgent.post(`/api/reviews/${id}/helpful`);
     expect(res.status).toBe(200);
@@ -157,12 +174,17 @@ describe('UC18 Respond to a review', () => {
       rating: 4,
       comment: 'Good',
     });
+    expect(created.status).toBe(201);
+
     // Act: restaurant owner replies to review on their profile.
     const res = await ctx.restaurantAgent
       .post(`/api/reviews/${created.body.review._id}/response`)
       .send({ response: 'Thanks for dining with us!' });
     expect(res.status).toBe(200);
     expect(res.body.response.text).toMatch(/Thanks/);
+
+    const review = await Review.findById(created.body.review._id);
+    expect(review.response.text).toBe('Thanks for dining with us!');
   });
 
   test('UC18-T02 test_non_restaurant_cannot_respond', async () => {
@@ -203,10 +225,15 @@ describe('UC18 Respond to a review', () => {
       restaurantId: ctx.restaurant._id,
       rating: 5,
     });
+    expect(created.status).toBe(201);
+
     const res = await ctx.restaurantAgent
       .post(`/api/reviews/${created.body.review._id}/response`)
       .send({ response: '' });
     expect(res.status).toBe(200);
+
+    const review = await Review.findById(created.body.review._id);
+    expect(review.response.text).toBe('');
   });
 
   test('UC18-T05 test_second_response_overwrites_first', async () => {
