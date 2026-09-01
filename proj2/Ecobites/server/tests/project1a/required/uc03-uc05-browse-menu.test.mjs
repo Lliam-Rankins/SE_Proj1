@@ -12,11 +12,11 @@ setupProject1aDb();
 describe('UC03 Browse restaurants', () => {
   test('UC03-T01 test_lists_restaurants_with_count_and_data_array', async () => {
     // Arrange: seed two restaurant accounts.
-    await registerRestaurant(newAgent(), {
+    const alpha = await registerRestaurant(newAgent(), {
       restaurantName: 'Alpha Bites',
       email: `alpha.${Date.now()}@p1a.test`,
     });
-    await registerRestaurant(newAgent(), {
+    const beta = await registerRestaurant(newAgent(), {
       restaurantName: 'Beta Bites',
       email: `beta.${Date.now()}@p1a.test`,
     });
@@ -25,8 +25,10 @@ describe('UC03 Browse restaurants', () => {
     // Assert: success wrapper with count and data array.
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.count).toBeGreaterThanOrEqual(2);
     expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data).toHaveLength(2);
+    expect(res.body.data.some((r) => String(r._id) === String(alpha.user._id))).toBe(true);
+    expect(res.body.data.some((r) => String(r._id) === String(beta.user._id))).toBe(true);
   });
 
   test('UC03-T02 test_get_restaurant_by_id_returns_profile', async () => {
@@ -41,6 +43,8 @@ describe('UC03 Browse restaurants', () => {
     expect(res.status).toBe(200);
     expect(res.body.data.restaurantName).toBe('Detail Cafe');
     expect(res.body).toHaveProperty('recentReviews');
+    const dbRestaurant = await User.findById(user._id);
+    expect(dbRestaurant.restaurantName).toBe('Detail Cafe');
   });
 
   test('UC03-T03 test_get_restaurant_by_id_returns_404_for_non_restaurant', async () => {
@@ -95,8 +99,11 @@ describe('UC04 View a restaurant menu', () => {
     const res = await newAgent().get(`/api/menu/restaurant/${restaurant._id}`);
     // Assert: only available item returned.
     expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].name).toBe('Available Soup');
+    expect(res.body[0].restaurantId).toEqual(String(restaurant._id));
+    expect(res.body.every((item) => item.isAvailable === true)).toBe(true);
   });
 
   test('UC04-T02 test_get_menu_returns_empty_array_when_none_available', async () => {
@@ -107,6 +114,7 @@ describe('UC04 View a restaurant menu', () => {
     // Act + Assert: empty array, not 404.
     const res = await newAgent().get(`/api/menu/restaurant/${restaurant._id}`);
     expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
     expect(res.body).toEqual([]);
   });
 
@@ -125,7 +133,9 @@ describe('UC04 View a restaurant menu', () => {
     const res = await newAgent().get(`/api/menu/restaurant/${restaurant._id}`);
     // Assert: public read succeeds.
     expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
     expect(res.body[0].name).toBe('Public Dish');
+    expect(res.body[0].restaurantId).toEqual(String(restaurant._id));
   });
 });
 
@@ -155,8 +165,10 @@ describe('UC05 Discover seasonal items', () => {
     const res = await newAgent().get('/api/menu/seasonal');
     // Assert: every result flagged seasonal; Fall Salad included.
     expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
     expect(res.body.every((i) => i.isSeasonal === true)).toBe(true);
-    expect(res.body.some((i) => i.name === 'Fall Salad')).toBe(true);
+    expect(res.body.some((i) => i.name === 'Fall Salad' && i.seasonalLabel === 'Fall')).toBe(true);
   });
 
   test('UC05-T02 test_get_seasonal_all_limits_to_20_most_recent', async () => {
@@ -180,7 +192,9 @@ describe('UC05 Discover seasonal items', () => {
     const res = await newAgent().get('/api/menu/seasonal');
     // Assert: server caps at 20.
     expect(res.status).toBe(200);
-    expect(res.body.length).toBeLessThanOrEqual(20);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body).toHaveLength(20);
+    expect(res.body.every((item) => item.isSeasonal === true)).toBe(true);
   });
 
   test('UC05-T03 test_seasonal_item_unavailable_excluded_from_lists', async () => {
@@ -202,6 +216,12 @@ describe('UC05 Discover seasonal items', () => {
     );
     // Assert: unavailable seasonal excluded.
     expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
     expect(res.body).toHaveLength(0);
+    const dbItem = await MenuItem.findOne({
+      restaurantId: restaurant._id,
+      isSeasonal: true,
+    });
+    expect(dbItem.isAvailable).toBe(false);
   });
 });
