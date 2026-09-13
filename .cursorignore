@@ -1,9 +1,5 @@
-node_modules
-.cursor
 .env
 .env.*
 .vscode
 .idea
-coverage
 .cursor
-
